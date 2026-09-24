@@ -5,6 +5,7 @@ import { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { updateObservationSchedule } from "@/lib/api/jadwal_observasi";
+import { handleApiError, showSuccessToast } from "@/lib/api-error";
 
 interface DatePickerProps {
   pasien: { 
@@ -29,35 +30,35 @@ export default function DatePicker({
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-  setSaving(true);
-  try {
-    const formattedDate = date.toLocaleDateString("en-CA");
+    setSaving(true);
+    try {
+      const formattedDate = date.toLocaleDateString("en-CA");
 
-    if (pasien.observation_id) {
-      const res = await updateObservationSchedule(
-        Number(pasien.observation_id),
-        formattedDate,
-        "00:00" // ⬅ jam dummy / default
-      );
+      if (pasien.observation_id) {
+        const res = await updateObservationSchedule(
+          Number(pasien.observation_id),
+          formattedDate,
+          "00:00" // ⬅ jam dummy / default
+        );
 
-      if (res?.success !== false) {
-        alert('Tanggal observasi untuk ${pasien.nama} berhasil diperbarui ✅');
-        onUpdate?.();
+        if (res?.success !== false) {
+          showSuccessToast(`Tanggal observasi untuk ${pasien.nama} berhasil diperbarui ✅`);
+          onUpdate?.();
+        } else {
+          handleApiError(res, "Gagal memperbarui tanggal observasi ❌");
+        }
       } else {
-        alert("Gagal memperbarui tanggal observasi ❌");
+        onSave?.(date);
       }
-    } else {
-      onSave?.(date);
-    }
 
-    onClose();
-  } catch (err) {
-    console.error(err);
-    alert("Terjadi kesalahan saat menyimpan tanggal asesmen.");
-  } finally {
-    setSaving(false);
-  }
-};
+      onClose();
+    } catch (err) {
+      console.error(err);
+      handleApiError(err, "Terjadi kesalahan saat menyimpan tanggal asesmen.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
 
   return (

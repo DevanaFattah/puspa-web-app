@@ -1,10 +1,11 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Bell, User } from "lucide-react";
+import { User, Search, Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { menu } from "./sidebar_owner";
-
+import NotificationPopover from "@/components/layout/NotificationPopover";
 
 interface MenuItem {
   name: string;
@@ -12,26 +13,30 @@ interface MenuItem {
 }
 
 interface MenuGroup {
-  title?: string;
+  section: string | null;
   items: MenuItem[];
 }
 
+interface HeaderOwnerProps {
+  onOpenSidebar: () => void;
+}
 
-export default function Header() {
+export default function HeaderOwner({ onOpenSidebar }: HeaderOwnerProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
-  const allItems = (menu as MenuGroup[]).flatMap(
-  (group) => group.items
-);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const allItems = (menu as MenuGroup[]).flatMap((group) => group.items);
 
   const activeItem = allItems.find(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/")
   );
 
-
-  // Custom title untuk Owner Pages yang tidak ada di menu
   const routeTitles: Record<string, string> = {
-    "/owner/dashboard_Owner": "Dashboard",
+    "/owner/dashboard-Owner": "Dashboard",
     "/owner/verifAdmin": "Verifikasi Admin",
     "/owner/verifTerapis": "Verifikasi Terapis",
     "/owner/allAdmin": "Data Admin",
@@ -42,35 +47,61 @@ export default function Header() {
 
   const title = routeTitles[pathname] || (activeItem ? activeItem.name : "Dashboard");
 
-  // 🔥 Kalau mau, nanti bisa ambil foto user dari context
-  const profilePicture: string | null = null; // ganti kalau pakai context/user state
-
   return (
-    <header className="w-full flex justify-between items-center p-4 bg-white shadow text-[#36315B]">
-      <h2 className="text-xl font-semibold">{title}</h2>
-
+    <header className="w-full flex justify-between items-center px-4 md:px-10 py-4 bg-white/70 backdrop-blur-xl border-b border-teal-50 text-[#1E5C58]">
+      {/* Page Title & Mobile Toggle */}
       <div className="flex items-center gap-3">
-        <span>Hallo, Owner Puspa</span>
+        {/* Mobile menu toggle */}
+        <button
+          onClick={onOpenSidebar}
+          className="p-2 -ml-2 rounded-lg hover:bg-teal-50 text-[#2B7A75] md:hidden transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
 
-        {/* Avatar / Profil */}
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-          {profilePicture ? (
-            <Image
-              src={profilePicture}
-              alt="Admin"
-              width={40}
-              height={40}
-              className="object-cover"
-            />
-          ) : (
-            <User className="w-6 h-6 text-gray-500" />
-          )}
+        <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+          <div>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight truncate max-w-[150px] sm:max-w-none">
+              {title}
+            </h2>
+            <p className="hidden md:block text-xs font-semibold text-gray-400 capitalize">
+              Sistem Informasi Holistic Care
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Action Icons */}
+      <div className="flex items-center gap-4 sm:gap-6">
+        {/* Search Bar (Styling Only) */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-teal-50 shadow-[0_2px_10px_rgba(43,122,117,0.05)] text-gray-400 focus-within:border-[#2B7A75] focus-within:ring-2 focus-within:ring-[#2B7A75]/10 transition-all duration-300">
+          <Search className="w-4 h-4 ml-1" />
+          <input
+            type="text"
+            placeholder="Cari..."
+            className="w-32 xl:w-48 bg-transparent border-none outline-none text-sm text-gray-600 focus:w-48 xl:focus:w-56 transition-all duration-300"
+          />
         </div>
 
-        <button className="relative flex items-center justify-center w-10 h-10 border border-[#36315B] rounded-lg hover:bg-[#81B7A9] hover:text-white transition">
-          <Bell className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full"></span>
-        </button>
+        {/* Notifications */}
+        <NotificationPopover />
+
+        {/* User Greet & Info */}
+        <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-gray-100/80">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-sm font-bold text-[#1E5C58]">
+              Owner Puspa
+            </span>
+            <span className="text-xs font-bold text-gray-400">
+              Owner
+            </span>
+          </div>
+
+          {/* Profile Avatar */}
+          <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#A2E4D3] shadow-md flex items-center justify-center bg-[#F4F9F8]">
+            <User className="w-6 h-6 text-[#2B7A75]" />
+          </div>
+        </div>
       </div>
     </header>
   );

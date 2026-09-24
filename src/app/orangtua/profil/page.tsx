@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
 import { getParentProfile, updateParentProfile } from "@/lib/api/profile";
 import { useProfile } from "@/context/ProfileContext";
-import { User, Edit3, Camera } from "lucide-react";
+import { User, Edit3, Camera, Heart, Calendar, Phone, Mail, Briefcase, Shield } from "lucide-react";
 
 export default function ProfileOrangtuaPage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -17,6 +17,7 @@ export default function ProfileOrangtuaPage() {
     guardian_name: string;
     guardian_type: string;
     relationship_with_child: string;
+    relationship_with_child_detail?: string;
     guardian_birth_date: string;
     guardian_phone: string;
     email: string;
@@ -84,6 +85,10 @@ export default function ProfileOrangtuaPage() {
     fd.append("guardian_type", formData.guardian_type);
     fd.append("relationship_with_child", formData.relationship_with_child);
     fd.append(
+      "relationship_with_child_detail",
+      formData.relationship_with_child_detail || ""
+    );
+    fd.append(
       "guardian_birth_date",
       formatDateToBE(formData.guardian_birth_date)
     );
@@ -110,113 +115,176 @@ export default function ProfileOrangtuaPage() {
   };
 
   return (
-    <ResponsiveOrangtuaLayout maxWidth="max-w-6xl">
-      <div className="">
+    <ResponsiveOrangtuaLayout maxWidth="max-w-4xl">
+      <div className="text-[#1E5C58] space-y-6">
         {!isEditing ? (
-          <div className="flex flex-col md:flex-row gap-6 lg:gap-8">
-            {/* Foto profil Section */}
-            <div className="flex flex-col items-center text-center p-6 shadow-sm border border-gray-100 rounded-2xl bg-white w-full md:w-1/3">
-              <h2 className="text-xl font-bold text-[#81B7A9] mt-4 line-clamp-1">
-                {formData.guardian_name}
-              </h2>
-              <span className="px-3 py-1 text-[#9197B3] text-xs font-medium rounded-full mt-2">
-                {formData.role}
-              </span>
-              <div className="relative mt-10">
-                {formData.profile_picture ? (
-                  <img
-                    src={formData.profile_picture}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#EAF4F0]"
-                    alt="Foto Profil"
-                  />
-                ) : (
-                  <div className="w-32 h-32 md:w-40 md:h-40 bg-gray-100 rounded-full flex items-center justify-center border-4 border-[#EAF4F0]">
-                    <User className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
+          <div className="flex flex-col gap-6">
+            
+            {/* PROFILE HEADER CARD */}
+            <div className="bg-white rounded-3xl border border-teal-50 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+              {/* Banner */}
+              <div className="h-28 sm:h-36 bg-gradient-to-r from-[#1E5C58] via-[#2B7A75] to-[#81B7A9]" />
+              
+              {/* Avatar & Title Info */}
+              <div className="px-6 pb-6 relative flex flex-col items-center text-center sm:text-left sm:items-end sm:flex-row sm:gap-6 -mt-14 sm:-mt-16">
+                <div className="relative shrink-0">
+                  {formData.profile_picture ? (
+                    <img
+                      src={formData.profile_picture}
+                      className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-lg bg-white"
+                      alt="Foto Profil"
+                    />
+                  ) : (
+                    <div className="w-28 h-28 sm:w-32 sm:h-32 bg-teal-50/70 rounded-full flex items-center justify-center border-4 border-white shadow-lg bg-white">
+                      <User className="w-12 h-12 sm:w-16 sm:h-16 text-[#2B7A75]" />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-4 sm:mb-2 flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-extrabold text-[#1E5C58] truncate">
+                    {formData.guardian_name}
+                  </h2>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-1.5">
+                    <span className="px-2.5 py-0.5 bg-teal-50 text-[#1E5C58] text-[10px] font-bold rounded-md uppercase tracking-wide border border-teal-100/30">
+                      {formData.role || "Orang Tua"}
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded-md uppercase tracking-wide border border-gray-100">
+                      Wali
+                    </span>
                   </div>
-                )}
+                </div>
+
+                <div className="mt-5 sm:mt-0 sm:mb-2 shrink-0 w-full sm:w-auto">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center justify-center gap-1.5 text-white bg-[#2B7A75] hover:bg-[#1E5C58] transition-all px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-teal-500/10 active:scale-95 cursor-pointer w-full sm:w-auto"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Edit Profil</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Info profil Section */}
-            <div className="flex-1 shadow-sm border border-gray-100 rounded-2xl p-5 md:p-8 bg-white">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-[#81B7A9] text-lg">Informasi Pribadi</h3>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 text-white bg-[#8EC3AA] hover:bg-[#7AB399] transition-colors px-4 py-2 rounded-xl text-sm font-medium cursor-pointer"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
-              </div>
+            {/* PERSONAL DETAILS CARD */}
+            <div className="bg-white border border-teal-50 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+              <h3 className="font-extrabold text-[#1E5C58] text-base mb-6 flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-[#2B7A75] rounded-full inline-block" />
+                Informasi Pribadi
+              </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5 text-sm">
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Nama</p>
-                  <p className="text-gray-700 font-semibold truncate">{formData.guardian_name}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Detail Item: Nama Lengkap */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama Lengkap</p>
+                    <p className="text-sm font-bold text-gray-700 truncate mt-0.5">{formData.guardian_name || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Hubungan</p>
-                  <p className="text-gray-700 font-semibold">{formData.relationship_with_child}</p>
+                {/* Detail Item: Hubungan */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Heart className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hubungan</p>
+                    <p className="text-sm font-bold text-gray-700 truncate mt-0.5">{formData.relationship_with_child || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Tanggal Lahir</p>
-                  <p className="text-gray-700 font-semibold">{formData.guardian_birth_date}</p>
+                {/* Detail Item: Tanggal Lahir */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tanggal Lahir</p>
+                    <p className="text-sm font-bold text-gray-700 truncate mt-0.5">{formData.guardian_birth_date || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Telepon</p>
-                  <p className="text-gray-700 font-semibold">{formData.guardian_phone}</p>
+                {/* Detail Item: Telepon */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nomor Telepon</p>
+                    <p className="text-sm font-bold text-gray-700 truncate mt-0.5">{formData.guardian_phone || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Email</p>
-                  <p className="text-gray-700 font-semibold">{formData.email}</p>
+                {/* Detail Item: Email */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30 sm:col-span-2">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Mail className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alamat Email</p>
+                    <p className="text-sm font-bold text-[#2B7A75] truncate mt-0.5">{formData.email || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">User Role</p>
-                  <p className="text-gray-700 font-semibold">{formData.role}</p>
+                {/* Detail Item: Pekerjaan */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Briefcase className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pekerjaan</p>
+                    <p className="text-sm font-bold text-gray-700 truncate mt-0.5">{formData.guardian_occupation || "-"}</p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">Pekerjaan</p>
-                  <p className="text-gray-700 font-semibold">{formData.guardian_occupation}</p>
+                {/* Detail Item: Role */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#F8FBFB] border border-teal-50/30">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                    <Shield className="w-5 h-5 text-[#2B7A75]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">User Role</p>
+                    <p className="text-sm font-bold text-gray-700 capitalize truncate mt-0.5">{formData.role || "-"}</p>
+                  </div>
                 </div>
 
               </div>
             </div>
           </div>
         ) : (
-          <div className="shadow-sm border border-gray-100 rounded-2xl p-5 md:p-8 bg-white">
-            <h2 className="text-xl font-bold text-[#4A8B73] mb-6 border-b pb-4">
+          <div className="border border-teal-50 rounded-3xl p-6 sm:p-8 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+            <h2 className="text-xl font-extrabold text-[#1E5C58] mb-6 border-b border-gray-100 pb-4 flex items-center gap-2">
+              <span className="w-1.5 h-4 bg-[#2B7A75] rounded-full inline-block" />
               Edit Informasi Pribadi
             </h2>
 
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Foto dan upload */}
-              <div className="flex flex-col items-center shrink-0">
+              <div className="flex flex-col items-center shrink-0 lg:border-r lg:border-gray-100 lg:pr-8">
                 <div className="relative group">
                   {selectedFile ? (
                     <img
                       src={URL.createObjectURL(selectedFile)}
-                      className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#8EC3AA]"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-[#2B7A75] shadow-md bg-white"
                       alt="Preview"
                     />
                   ) : formData.profile_picture ? (
                     <img
                       src={formData.profile_picture}
-                      className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#8EC3AA]"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-[#2B7A75] shadow-md bg-white"
                       alt="Foto Profil"
                     />
                   ) : (
-                    <div className="w-32 h-32 md:w-40 md:h-40 bg-gray-100 rounded-full flex items-center justify-center border-4 border-dashed border-gray-300">
-                      <User className="w-12 h-12 text-gray-400" />
+                    <div className="w-32 h-32 bg-teal-50/50 rounded-full flex items-center justify-center border-4 border-dashed border-teal-200">
+                      <User className="w-12 h-12 text-[#2B7A75]" />
                     </div>
                   )}
-                  <label className="absolute bottom-1 right-1 bg-[#4A8B73] p-2 rounded-full text-white cursor-pointer hover:bg-[#3A6B58] shadow-lg">
+                  <label className="absolute bottom-1 right-1 bg-[#2B7A75] hover:bg-[#1E5C58] p-2.5 rounded-full text-white cursor-pointer shadow-lg transition-all active:scale-90 border-2 border-white">
                     <Camera className="w-4 h-4" />
                     <input
                       type="file"
@@ -226,90 +294,90 @@ export default function ProfileOrangtuaPage() {
                     />
                   </label>
                 </div>
-                <p className="mt-4 text-xs text-gray-400 text-center max-w-[150px]">
-                  Klik ikon kamera untuk mengubah foto profil
+                <p className="mt-4 text-[10px] font-bold text-gray-400 text-center max-w-[150px] uppercase tracking-wide">
+                  Ubah Foto Profil
                 </p>
               </div>
 
               {/* Form input */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Nama Lengkap</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Nama Lengkap</label>
                   <input
                     name="guardian_name"
                     value={formData.guardian_name}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                     placeholder="Masukkan nama lengkap"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Nomor Telepon</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Nomor Telepon</label>
                   <input
                     name="guardian_phone"
                     value={formData.guardian_phone}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                     placeholder="Contoh: 0812..."
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Hubungan</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Hubungan</label>
                   <input
                     name="relationship_with_child"
                     value={formData.relationship_with_child}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Pekerjaan</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Pekerjaan</label>
                   <input
                     name="guardian_occupation"
                     value={formData.guardian_occupation}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Email</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Email</label>
                   <input
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Tanggal Lahir</label>
+                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Tanggal Lahir</label>
                   <input
                     type="date"
                     name="guardian_birth_date"
                     value={formData.guardian_birth_date}
                     onChange={handleChange}
-                    className="border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-[#8EC3AA] focus:border-transparent outline-none transition-all text-sm"
+                    className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] transition-all text-sm font-semibold text-gray-700 bg-white"
                   />
                 </div>
               </div>
             </div>
 
             {/* Button aksi */}
-            <div className="flex flex-col sm:flex-row justify-end mt-10 gap-3 border-t pt-6">
+            <div className="flex flex-col sm:flex-row justify-end mt-10 gap-3 border-t border-gray-100 pt-6">
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-6 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold transition-colors w-full sm:w-auto text-sm cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 font-bold transition-all w-full sm:w-auto text-xs cursor-pointer"
               >
                 Batal
               </button>
 
               <button
                 onClick={handleUpdate}
-                className="px-6 py-2.5 rounded-xl bg-[#8EC3AA] hover:bg-[#7AB399] text-white font-semibold shadow-md shadow-[#8EC3AA]/20 transition-all w-full sm:w-auto text-sm cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-[#2B7A75] hover:bg-[#1E5C58] text-white font-bold shadow-md shadow-teal-500/10 transition-all w-full sm:w-auto text-xs active:scale-95 cursor-pointer"
               >
                 Simpan Perubahan
               </button>

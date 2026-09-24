@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, ArrowLeft, ClipboardCheck, MessageSquare, Award, Play } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getAssessmentAnswers } from "@/lib/api/asesment";
 
 /* ================== RANGE UTAMA ================== */
@@ -33,13 +33,13 @@ const GROSS_MOTOR_GROUPS = [
   { title: "Berjalan", range: [392, 394] },
 ];
 
-export default function Page() {
+export default function FisioterapiRiwayatPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const assessmentId = searchParams.get("assessment_id");
 
   const [activeTab, setActiveTab] = useState("Pemeriksaan Umum");
-  const [selectedKhusus, setSelectedKhusus] =
-    useState("pemeriksaan_sensoris");
+  const [selectedKhusus, setSelectedKhusus] = useState("pemeriksaan_sensoris");
   const [answers, setAnswers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -63,10 +63,7 @@ export default function Page() {
   ];
 
   const tabIndex = tabs.findIndex((t) => t.key === activeTab);
-const khususIndex = pemeriksaanKhususList.findIndex(
-  (i) => i.key === selectedKhusus
-);
-
+  const khususIndex = pemeriksaanKhususList.findIndex((i) => i.key === selectedKhusus);
 
   /* ================== FETCH ================== */
   useEffect(() => {
@@ -84,153 +81,144 @@ const khususIndex = pemeriksaanKhususList.findIndex(
     const range = GROUP_RANGE[key];
     if (!range) return [];
     return answers
-      .filter(
-        (q) => q.question_id >= range[0] && q.question_id <= range[1]
-      )
+      .filter((q) => q.question_id >= range[0] && q.question_id <= range[1])
       .sort((a, b) => a.question_id - b.question_id);
   };
 
-  /* ================== PALPASI OTOT (FIX FINAL) ================== */
+  /* ================== NAV LOGIC ================== */
+  const handlePrev = () => {
+    if (activeTab === "pemeriksaan_khusus" && khususIndex > 0) {
+      setSelectedKhusus(pemeriksaanKhususList[khususIndex - 1].key);
+      return;
+    }
+    if (tabIndex > 0) {
+      const prevTab = tabs[tabIndex - 1].key;
+      setActiveTab(prevTab);
+      if (prevTab === "pemeriksaan_khusus") {
+        setSelectedKhusus(pemeriksaanKhususList[pemeriksaanKhususList.length - 1].key);
+      }
+    }
+  };
+
+  const handleNext = () => {
+    if (activeTab === "pemeriksaan_khusus" && khususIndex < pemeriksaanKhususList.length - 1) {
+      setSelectedKhusus(pemeriksaanKhususList[khususIndex + 1].key);
+      return;
+    }
+    if (tabIndex < tabs.length - 1) {
+      const nextTab = tabs[tabIndex + 1].key;
+      setActiveTab(nextTab);
+      if (nextTab === "pemeriksaan_khusus") {
+        setSelectedKhusus(pemeriksaanKhususList[0].key);
+      }
+    }
+  };
+
+  /* ================== PALPASI OTOT ================== */
   const renderPalpasiOtot = (ans: any) => {
-  if (!ans || typeof ans !== "object") return "-";
+    if (!ans || typeof ans !== "object") return "-";
 
-  const rows = [
-    { key: "hypertonus", label: "Hypertonus (spastic / rigid)" },
-    { key: "hypotonus", label: "Hypotonus" },
-    { key: "fluktuatif", label: "Fluktuatif" },
-    { key: "normal", label: "Normal" },
-  ];
+    const rows = [
+      { key: "hypertonus", label: "Hypertonus (spastic / rigid)" },
+      { key: "hypotonus", label: "Hypotonus" },
+      { key: "fluktuatif", label: "Fluktuatif" },
+      { key: "normal", label: "Normal" },
+    ];
 
-  const renderDS = (rowKey: string, prefix: "aga" | "agb") => {
-    const dKey = `${rowKey}_${prefix}_d`;
-    const sKey = `${rowKey}_${prefix}_s`;
+    const renderDS = (rowKey: string, prefix: "aga" | "agb") => {
+      const dKey = `${rowKey}_${prefix}_d`;
+      const sKey = `${rowKey}_${prefix}_s`;
+      const dVal = ans[dKey] ?? "";
+      const sVal = ans[sKey] ?? "";
+
+      return (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
+          {dVal && (
+            <span className="inline-flex items-center gap-1 bg-teal-50 border border-teal-100 text-[#1E5C58] text-[9px] font-bold px-1.5 py-0.5 rounded">
+              D: <span className="font-extrabold">{dVal}</span>
+            </span>
+          )}
+          {sVal && (
+            <span className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">
+              S: <span className="font-extrabold">{sVal}</span>
+            </span>
+          )}
+        </div>
+      );
+    };
 
     return (
-      <div className="flex flex-col items-center justify-center gap-1">
-        <div className="flex items-center gap-1">
-          <span className="font-medium">D :</span>
-          <span>{ans[dKey] ?? ""}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="font-medium">S :</span>
-          <span>{ans[sKey] ?? ""}</span>
-        </div>
+      <div className="overflow-x-auto border border-teal-100/40 rounded-xl shadow-sm mt-2 bg-white">
+        <table className="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr className="bg-[#EAF4F2]/50 text-[#1E5C58] font-bold border-b border-teal-100/40">
+              <th className="p-2.5 w-[40%] text-[10px] uppercase tracking-wider font-extrabold">Abnormalitas Tonus Otot</th>
+              <th className="p-2.5 w-[20%] text-center text-[10px] uppercase tracking-wider font-extrabold">AGA</th>
+              <th className="p-2.5 w-[20%] text-center text-[10px] uppercase tracking-wider font-extrabold">AGB</th>
+              <th className="p-2.5 w-[20%] text-center text-[10px] uppercase tracking-wider font-extrabold">Perut</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-teal-50/60">
+            {rows.map((row) => (
+              <tr key={row.key} className="hover:bg-teal-50/10 transition-colors">
+                <td className="p-2.5 font-bold text-gray-700">{row.label}</td>
+                <td className="p-2.5 text-center">{renderDS(row.key, "aga")}</td>
+                <td className="p-2.5 text-center">{renderDS(row.key, "agb")}</td>
+                <td className="p-2.5 text-center">
+                  {ans[`${row.key}_perut`] ? (
+                    <span className="inline-block bg-amber-50 border border-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                      {ans[`${row.key}_perut`]}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400 font-medium">-</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   };
 
-  const handlePrev = () => {
-  // 🔹 Jika di Pemeriksaan Khusus dan bukan item pertama
-  if (activeTab === "pemeriksaan_khusus" && khususIndex > 0) {
-    setSelectedKhusus(pemeriksaanKhususList[khususIndex - 1].key);
-    return;
-  }
-
-  // 🔹 Jika masih bisa pindah tab ke kiri
-  if (tabIndex > 0) {
-    const prevTab = tabs[tabIndex - 1].key;
-    setActiveTab(prevTab);
-
-    // reset dropdown khusus saat masuk
-    if (prevTab === "pemeriksaan_khusus") {
-      setSelectedKhusus(pemeriksaanKhususList[0].key);
-    }
-  }
-};
-
-const handleNext = () => {
-  // 🔹 Jika di Pemeriksaan Khusus dan belum terakhir
-  if (
-    activeTab === "pemeriksaan_khusus" &&
-    khususIndex < pemeriksaanKhususList.length - 1
-  ) {
-    setSelectedKhusus(pemeriksaanKhususList[khususIndex + 1].key);
-    return;
-  }
-
-  // 🔹 Pindah ke tab berikutnya
-  if (tabIndex < tabs.length - 1) {
-    setActiveTab(tabs[tabIndex + 1].key);
-  }
-};
-
-
-  return (
-    <div className="space-y-2">
-      {/* HEADER */}
-      <div className="grid grid-cols-[2.5fr_1.5fr_1.5fr_2fr] font-semibold border-b pb-2">
-        <div>Abnormalitas Tonus Otot</div>
-        <div className="text-center">AGA</div>
-        <div className="text-center">AGB</div>
-        <div className="text-center">Perut</div>
-      </div>
-
-      {/* ISI */}
-      {rows.map((row) => (
-        <div
-          key={row.key}
-          className="grid grid-cols-[2.5fr_1.5fr_1.5fr_2fr] gap-4 py-2 border-b"
-        >
-          {/* Label */}
-          <div className="flex items-center">
-            {row.label}
-          </div>
-
-          {/* AGA */}
-          <div className="flex justify-center">
-            {renderDS(row.key, "aga")}
-          </div>
-
-          {/* AGB */}
-          <div className="flex justify-center">
-            {renderDS(row.key, "agb")}
-          </div>
-
-          {/* Perut */}
-          <div className="flex items-center justify-center">
-            {ans[`${row.key}_perut`] ?? ""}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
   /* ================== RENDER ANSWER DEFAULT ================== */
-const renderAnswer = (q: any) => {
-  const ans = q.answer;
-  if (!ans) return "-";
+  const renderAnswer = (q: any) => {
+    const ans = q.answer;
+    if (!ans) return <span className="text-gray-400 font-normal italic text-[11px]">Tidak ada jawaban</span>;
 
-  return (
-    <div className="space-y-2">
-      {/* VALUE (radio / pilihan / teks utama) */}
-      {ans.value !== undefined && ans.value !== null && (
-        Array.isArray(ans.value) ? (
-          <ul className="list-disc ml-5">
-            {ans.value.map((v: string, i: number) => (
-              <li key={i}>{v}</li>
-            ))}
-          </ul>
-        ) : (
-          <div className="font-medium text-gray-800">
-            {ans.value}
+    return (
+      <div className="space-y-2">
+        {ans.value !== undefined && ans.value !== null && ans.value !== "" && (
+          Array.isArray(ans.value) ? (
+            <div className="flex flex-wrap gap-1">
+              {ans.value.map((v: string, i: number) => (
+                <span key={i} className="inline-block bg-teal-50 text-[#1E5C58] border border-teal-100/50 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                  {v}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="font-bold text-gray-700 text-xs bg-teal-50/10 border border-teal-100/20 rounded-lg p-2.5 leading-relaxed">
+              {ans.value}
+            </div>
+          )
+        )}
+
+        {ans.note && ans.note.trim() !== "" && (
+          <div className="flex items-start gap-1.5 bg-gray-50/70 border border-gray-100 p-2 rounded-lg text-[10px] font-semibold text-gray-600">
+            <MessageSquare className="w-3.5 h-3.5 text-[#81B7A9] shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-gray-700">Catatan:</span> {ans.note}
+            </div>
           </div>
-        )
-      )}
-
-      {/* NOTE (jika diisi) */}
-      {ans.note && ans.note.trim() !== "" && (
-        <div className="text-sm text-gray-600 bg-white border rounded p-2">
-          <span className="font-semibold">Catatan:</span> {ans.note}
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
   /* ================== GROSS MOTOR ================== */
   const renderGrossMotor = (questions: any[]) => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {GROSS_MOTOR_GROUPS.map((g) => {
         const qs = questions.filter(
           (q) => q.question_id >= g.range[0] && q.question_id <= g.range[1]
@@ -238,148 +226,176 @@ const renderAnswer = (q: any) => {
         if (qs.length === 0) return null;
 
         return (
-          <div key={g.title} className="border rounded-lg p-4 bg-gray-50">
-            <div className="font-semibold text-lg text-[#3A9C85] mb-4">
+          <div key={g.title} className="bg-gray-50/50 border border-gray-100 rounded-xl p-4 space-y-3">
+            <h4 className="font-extrabold text-xs text-[#1E5C58] tracking-wider uppercase border-b border-gray-100 pb-1.5">
               {g.title}
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {qs.map((q) => (
+                <div key={q.question_id} className="bg-white p-3 rounded-lg border border-teal-50/60 shadow-sm flex flex-col justify-between gap-2.5">
+                  <div>
+                    <span className="inline-block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Gerakan</span>
+                    <p className="text-[11px] md:text-xs font-bold text-[#1E5C58] leading-relaxed">
+                      {q.question_text}
+                    </p>
+                  </div>
+                  <div className="border-t border-gray-50 pt-2">
+                    {renderAnswer(q)}
+                  </div>
+                </div>
+              ))}
             </div>
-            {qs.map((q) => (
-              <div key={q.question_id} className="mb-3">
-                <div className="text-sm font-medium mb-1">
-                  {q.question_text}
-                </div>
-                <div className="bg-white border rounded p-2">
-                  {renderAnswer(q)}
-                </div>
-              </div>
-            ))}
           </div>
         );
       })}
     </div>
   );
 
-  const handlePrev = () => {
-    if (activeTab === "pemeriksaan_khusus" && khususIndex > 0) {
-      setSelectedKhusus(pemeriksaanKhususList[khususIndex - 1].key);
-      return;
-    }
-    if (tabIndex > 0) setActiveTab(tabs[tabIndex - 1].key);
-  };
-
-  const handleNext = () => {
-    if (
-      activeTab === "pemeriksaan_khusus" &&
-      khususIndex < pemeriksaanKhususList.length - 1
-    ) {
-      setSelectedKhusus(pemeriksaanKhususList[khususIndex + 1].key);
-      return;
-    }
-    if (tabIndex < tabs.length - 1) setActiveTab(tabs[tabIndex + 1].key);
-  };
-
-
-  if (loading) return <div className="p-10">Memuat...</div>;
-
-   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-  
-      {/* SIDEBAR */}
-      <div className="fixed inset-y-0 left-0 w-64 z-40 bg-white">
-        <SidebarTerapis />
-      </div>
-  
-      {/* AREA KANAN */}
-      <div className="ml-64 flex-1">
-  
-        {/* HEADER */}
-        <div className="fixed top-0 left-64 right-0 h-16 z-30 bg-white">
-          <HeaderTerapis />
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#81B7A9] border-t-transparent"></div>
+          <p className="text-sm font-semibold text-[#1E5C58]">Memuat riwayat...</p>
         </div>
-  
-        {/* CONTENT SCROLL */}
-        <div
-          className="pt-16 h-screen overflow-y-auto bg-gray-50"
-        >
-          <div className="p-6">
-            {/* FRAME UTAMA */}
-            <div className="bg-white rounded-xl shadow-md border border-gray-200"></div>
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => (window.location.href = "/terapis/asessment")}
-              className="text-[#36315B] hover:text-red-500 font-bold text-2xl"
-            >
-              ✕
-            </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-6 space-y-4 text-[#1E5C58]">
+      {/* HEADER & ACTION */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-teal-100/50 pb-3">
+        <div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#81B7A9] uppercase tracking-wider">
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            <span>Riwayat Asesmen Fisioterapi</span>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow"> 
-            <h2 className="text-xl font-semibold mb-4"> Riwayat Jawaban Pemeriksaan </h2>
-          <div className="flex gap-6 border-b mb-6">
-            {tabs.map((t) => (
+          <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-[#1E5C58] mt-0.5">
+            Fisioterapi ({activeTab === "pemeriksaan_khusus" ? selectedKhusus.replace(/_/g, " ").toUpperCase() : activeTab})
+          </h1>
+        </div>
+        <button
+          onClick={() => {
+            const status = searchParams.get("status") || "completed";
+            router.push(`/terapis/asessment?type=fisio&status=${status}`);
+          }}
+          className="cursor-pointer inline-flex items-center gap-1.5 bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-semibold px-3 py-2 rounded-xl text-xs transition-all duration-300 shadow-[0_4px_12px_rgba(30,92,88,0.15)] hover:shadow-[0_8px_20px_rgba(30,92,88,0.25)] hover:-translate-y-0.5 self-start sm:self-auto"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Kembali ke Daftar</span>
+        </button>
+      </div>
+
+      {/* MAIN TABS CAPSULES */}
+      <div className="flex flex-wrap gap-1.5 p-1 bg-[#EAF4F2]/50 border border-teal-100/30 rounded-xl w-fit">
+        {tabs.map((t) => {
+          const isActive = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={`cursor-pointer px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-lg transition-all duration-300 ${
+                isActive
+                  ? "bg-[#1E5C58] text-white shadow-sm"
+                  : "text-[#1E5C58]/80 hover:bg-white/60 hover:text-[#1E5C58]"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* SUB-ASPEK TABS FOR PEMERIKSAAN KHUSUS */}
+      {activeTab === "pemeriksaan_khusus" && (
+        <div className="flex flex-wrap gap-1.5 p-1.5 border border-teal-100/30 bg-[#EAF4F2]/30 rounded-xl">
+          {pemeriksaanKhususList.map((i) => {
+            const isSelected = selectedKhusus === i.key;
+            return (
               <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={`pb-2 ${
-                  activeTab === t.key
-                    ? "border-b-4 border-[#3A9C85] text-[#3A9C85]"
-                    : "text-gray-500"
+                key={i.key}
+                onClick={() => setSelectedKhusus(i.key)}
+                className={`cursor-pointer px-3 py-1 text-[10px] font-bold rounded-lg transition-all duration-300 ${
+                  isSelected
+                    ? "bg-[#81B7A9] text-white shadow-sm"
+                    : "text-[#1E5C58]/80 hover:bg-white/40 hover:text-[#1E5C58]"
                 }`}
               >
-                {t.label}
+                {i.label}
               </button>
-            ))}
-          </div>
-
-          {activeTab === "pemeriksaan_khusus" && (
-            <select
-              className="border p-2 rounded mb-6 w-full"
-              value={selectedKhusus}
-              onChange={(e) => setSelectedKhusus(e.target.value)}
-            >
-              {pemeriksaanKhususList.map((i) => (
-                <option key={i.key} value={i.key}>
-                  {i.label}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {activeTab === "pemeriksaan_khusus" &&
-          selectedKhusus === "gross_motor_pola_gerak" ? (
-            renderGrossMotor(filteredQuestions())
-          ) : (
-            filteredQuestions().map((q) => (
-              <div key={q.question_id} className="mb-6">
-                <div className="font-medium mb-2">
-                  {q.question_text}
-                </div>
-                <div className="bg-gray-50 border p-3 rounded">
-                  {q.question_id >= 411 && q.question_id <= 414
-                    ? renderPalpasiOtot(q.answer)
-                    : renderAnswer(q)}
-                </div>
-              </div>
-            ))
-          )}
-          {/* TOMBOL NAVIGASI */}
-            <div className="flex justify-between mt-10 pt-4 border-t">
-              <button
-                onClick={handlePrev}
-                className="px-6 py-2 rounded border text-gray-600 hover:bg-gray-100"
-              >
-                Sebelumnya
-              </button>
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 rounded bg-[#3A9C85] text-white hover:opacity-90"
-              >
-                Lanjutkan
-              </button>
-
+            );
+          })}
         </div>
+      )}
+
+      {/* CONTENT CARD */}
+      <div className="bg-white rounded-xl p-4 md:p-6 border border-teal-50 shadow-[0_4px_24px_rgba(30,92,88,0.02)]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeTab}|${selectedKhusus}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            {activeTab === "pemeriksaan_khusus" && selectedKhusus === "gross_motor_pola_gerak" ? (
+              renderGrossMotor(filteredQuestions())
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {filteredQuestions().map((q) => {
+                  const isPalpasi = q.question_id >= 411 && q.question_id <= 414;
+                  return (
+                    <div
+                      key={q.question_id}
+                      className={`p-3.5 rounded-xl border border-teal-50/60 shadow-sm flex flex-col justify-between gap-3 bg-white ${
+                        isPalpasi ? "md:col-span-2" : ""
+                      }`}
+                    >
+                      <div>
+                        <span className="inline-block text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">
+                          Pertanyaan / Aspek
+                        </span>
+                        <h3 className="text-[11px] md:text-xs font-extrabold text-[#1E5C58] leading-relaxed">
+                          {q.question_text}
+                        </h3>
+                      </div>
+                      <div className={isPalpasi ? "" : "border-t border-gray-50 pt-2"}>
+                        {isPalpasi ? renderPalpasiOtot(q.answer) : renderAnswer(q)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
-    </div>
-    </div>
+
+      {/* BOTTOM NAVIGATION */}
+      <div className="flex items-center justify-between border-t border-teal-100/50 pt-4 mt-4">
+        <button
+          onClick={handlePrev}
+          className="cursor-pointer inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-[10px] font-bold bg-white border-teal-100 text-[#1E5C58] hover:bg-teal-50/20 transition-all duration-300"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>Sebelumnya</span>
+        </button>
+
+        <span className="text-[10px] font-bold text-[#81B7A9] uppercase tracking-widest bg-teal-50/40 px-2.5 py-1 rounded-lg border border-teal-100/30">
+          {activeTab === "pemeriksaan_khusus" ? `${khususIndex + 1} / ${pemeriksaanKhususList.length} (Khusus)` : `${tabIndex + 1} / ${tabs.length}`}
+        </span>
+
+        <button
+          onClick={handleNext}
+          className="cursor-pointer inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-[10px] font-bold bg-white border-teal-100 text-[#1E5C58] hover:bg-teal-50/20 transition-all duration-300"
+        >
+          <span>Selanjutnya</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
+

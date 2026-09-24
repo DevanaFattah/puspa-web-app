@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock, ArrowLeft, Save } from "lucide-react";
 import { updatePassword } from "@/lib/api/profile";
+import { handleApiError, showSuccessToast } from "@/lib/api-error";
+import Link from "next/link";
 
 export default function PasswordOrangtuaPage() {
   const [showOld, setShowOld] = useState(false);
@@ -22,12 +22,12 @@ export default function PasswordOrangtuaPage() {
   // ============================
   const handleSave = async () => {
     if (!oldPass || !newPass || !confirmPass) {
-      alert("Semua field harus diisi.");
+      handleApiError(null, "Semua field harus diisi.");
       return;
     }
 
     if (newPass !== confirmPass) {
-      alert("Konfirmasi password tidak cocok.");
+      handleApiError(null, "Konfirmasi password tidak cocok.");
       return;
     }
 
@@ -41,115 +41,129 @@ export default function PasswordOrangtuaPage() {
       });
 
       if (res?.success) {
-        alert("Password berhasil diubah!");
+        showSuccessToast("Password berhasil diubah!");
 
         // reset form
         setOldPass("");
         setNewPass("");
         setConfirmPass("");
       } else {
-        alert(res?.message || "Gagal mengubah password");
+        handleApiError(res, "Gagal mengubah password");
       }
     } catch (err) {
-      alert("Terjadi kesalahan saat mengubah password.");
+      handleApiError(err, "Terjadi kesalahan saat mengubah password.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-        <div className="flex min-h-screen bg-gray-50 text-[#36315B]">
-          <SidebarTerapis />
-    
-          <div className="flex-1 flex flex-col">
-            <HeaderTerapis />
-    
-            <main className="p-8">
-           
-          <div className="bg-white rounded-xl p-6 shadow-md max-w-xl mx-auto mt-4">
-            <h2 className="text-xl font-semibold text-[#4A8B73] text-center">
-              Ubah Password
-            </h2>
+    <div className="p-6 md:p-8 space-y-6 text-[#1E5C58] bg-[#F8FBFB] min-h-screen flex justify-center items-start">
+      <div className="w-full max-w-lg bg-white rounded-3xl border border-teal-50/60 shadow-[0_4px_24px_rgba(30,92,88,0.02)] overflow-hidden">
+        {/* Accent Banner */}
+        <div className="bg-[#EAF4F2]/30 px-6 py-5 border-b border-teal-50 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+            <Lock size={18} />
+          </div>
+          <div>
+            <h2 className="text-sm font-extrabold tracking-tight">Keamanan Akun</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">Ubah Password Anda</p>
+          </div>
+        </div>
 
-            <div className="mt-6">
-              {/* PASSWORD SAAT INI */}
-              <label className="text-sm font-semibold">Password Saat Ini</label>
-              <div className="relative mt-1">
-                <input
-                  value={oldPass}
-                  onChange={(e) => setOldPass(e.target.value)}
-                  type={showOld ? "text" : "password"}
-                  className="border w-full px-3 py-2 rounded"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowOld(!showOld)}
-                  className="absolute right-3 top-2.5 text-gray-500"
-                >
-                  {showOld ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-
-              {/* PASSWORD BARU */}
-              <label className="text-sm font-semibold mt-4 block">
-                Password Baru
-              </label>
-              <div className="relative mt-1">
-                <input
-                  value={newPass}
-                  onChange={(e) => setNewPass(e.target.value)}
-                  type={showNew ? "text" : "password"}
-                  className="border w-full px-3 py-2 rounded"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-2.5 text-gray-500"
-                >
-                  {showNew ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-
-              {/* KONFIRMASI PASSWORD */}
-              <label className="text-sm font-semibold mt-4 block">
-                Konfirmasi Password
-              </label>
-              <div className="relative mt-1">
-                <input
-                  value={confirmPass}
-                  onChange={(e) => setConfirmPass(e.target.value)}
-                  type={showConfirm ? "text" : "password"}
-                  className="border w-full px-3 py-2 rounded"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-2.5 text-gray-500"
-                >
-                  {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-
-              {/* BUTTON */}
-              <div className="flex justify-between mt-6">
-                <a
-                  href="/terapis/profileTerapis"
-                  className="px-4 py-2 rounded bg-gray-300"
-                >
-                  Kembali
-                </a>
-
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="px-4 py-2 rounded bg-[#8EC3AA] text-white disabled:opacity-50"
-                >
-                  {loading ? "Menyimpan..." : "Simpan"}
-                </button>
-              </div>
+        <div className="p-6 space-y-5">
+          {/* PASSWORD SAAT INI */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500">Password Saat Ini</label>
+            <div className="relative">
+              <input
+                value={oldPass}
+                onChange={(e) => setOldPass(e.target.value)}
+                type={showOld ? "text" : "password"}
+                className="w-full pl-3 pr-10 py-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                placeholder="Masukkan password saat ini"
+              />
+              <button
+                type="button"
+                onClick={() => setShowOld(!showOld)}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-[#2B7A75] transition-colors"
+              >
+                {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
-        </main>
+
+          {/* PASSWORD BARU */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500">Password Baru</label>
+            <div className="relative">
+              <input
+                value={newPass}
+                onChange={(e) => setNewPass(e.target.value)}
+                type={showNew ? "text" : "password"}
+                className="w-full pl-3 pr-10 py-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                placeholder="Masukkan password baru"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNew(!showNew)}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-[#2B7A75] transition-colors"
+              >
+                {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* KONFIRMASI PASSWORD */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500">Konfirmasi Password Baru</label>
+            <div className="relative">
+              <input
+                value={confirmPass}
+                onChange={(e) => setConfirmPass(e.target.value)}
+                type={showConfirm ? "text" : "password"}
+                className="w-full pl-3 pr-10 py-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                placeholder="Konfirmasi password baru"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-[#2B7A75] transition-colors"
+              >
+                {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {/* ACTIONS */}
+          <div className="flex justify-between items-center pt-4 border-t border-gray-100 mt-6">
+            <Link
+              href="/terapis/profileTerapis"
+              className="cursor-pointer px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all duration-300 flex items-center gap-1.5"
+            >
+              <ArrowLeft size={14} />
+              <span>Kembali</span>
+            </Link>
+
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="cursor-pointer px-5 py-2.5 rounded-xl bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-bold text-xs transition-all duration-300 flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Menyimpan...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  <span>Simpan Password</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

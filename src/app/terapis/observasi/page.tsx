@@ -4,14 +4,24 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Menu } from "lucide-react";
+import { 
+  Eye, 
+  Search, 
+  Calendar, 
+  ArrowRight, 
+  X, 
+  User, 
+  Phone, 
+  Clock, 
+  ClipboardList, 
+  Heart 
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
 import {
   getScheduledObservations,
   getScheduledObservationDetail,
 } from "@/lib/api/observasiTerapis";
+import { handleApiError } from "@/lib/api-error";
 
 interface Anak {
   observation_id: string | number;
@@ -71,7 +81,6 @@ export default function ObservasiPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<Anak | null>(null);
   const [activeKategori, setActiveKategori] = useState<number>(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [detailObservasi, setDetailObservasi] = useState<any | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
@@ -158,7 +167,7 @@ export default function ObservasiPage() {
       setSelected(null);
     } catch (err) {
       console.error("❌ Gagal ambil detail observasi:", err);
-      alert("Gagal memuat detail observasi");
+      handleApiError(err, "Gagal memuat detail observasi");
     } finally {
       setLoadingDetail(false);
     }
@@ -170,336 +179,369 @@ export default function ObservasiPage() {
   }, [filterDate, searchName]);
 
   return (
-    <div className="flex h-screen text-[#36315B] font-playpen">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 sm:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-<div
-  className={`
-    fixed inset-y-0 left-0 z-40 w-64 bg-white
-    shadow-lg transform transition-transform duration-300
-    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-    sm:translate-x-0
-  `}
->
-
-        <SidebarTerapis
-          activePage="observasi"
-          isMobile={true}
-          onClose={() => setSidebarOpen(false)}
-        />
-      </div>
-
-      <div className="flex flex-col flex-1 bg-gray-50">
-        <div className="fixed top-0 left-0 sm:left-64 right-0 z-30 bg-white shadow-sm">
-  <HeaderTerapis />
-</div>
-
-
-        <div className="sm:hidden p-2">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-md text-[#36315B] hover:bg-gray-200"
-          >
-            <Menu size={24} />
-          </button>
-        </div>
-
-        <main className="pt-20 sm:pt-24 pl-0 sm:pl-[18rem] p-4 sm:p-6 overflow-y-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
-            <h2 className="text-lg sm:text-2xl font-bold">Pilih Anak Untuk Observasi</h2>
-            <button
-              onClick={() => router.push("/terapis/observasi/riwayat")}
-              className="bg-[#81B7A9] hover:bg-[#36315B] text-white font-semibold px-3 py-2 rounded-lg text-sm sm:text-base"
-            >
-              Riwayat
-            </button>
+    <div className="p-6 md:p-8 space-y-8 text-[#1E5C58] bg-[#F8FBFB] min-h-screen">
+      {/* ================= SEARCH, FILTER & ACTION ================= */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
+        <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
+          {/* Calendar Input */}
+          <div className="relative w-full sm:w-64">
+            <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#81B7A9]" />
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 border border-teal-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#81B7A9] shadow-[0_2px_8px_rgba(30,92,88,0.02)] hover:border-teal-200 transition-colors"
+            />
           </div>
 
-          {/* Filter & Search */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
-  <input
-    type="date"
-    value={filterDate}
-    onChange={(e) => setFilterDate(e.target.value)}
-    placeholder="Filter Tanggal"
-    className="
-      border border-[#81B7A9] rounded px-3 py-1.5 text-sm
-      shadow-sm
-      transition-all duration-300 ease-in-out
-      hover:shadow-md
-      focus:outline-none focus:ring-2 focus:ring-[#81B7A9] focus:shadow-lg
-    "
-  />
+          {/* Search Input */}
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#81B7A9]" />
+            <input
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="Cari nama anak atau nama orang tua..."
+              className="w-full pl-10 pr-4 py-2.5 border border-teal-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#81B7A9] shadow-[0_2px_8px_rgba(30,92,88,0.02)] hover:border-teal-200 transition-colors"
+            />
+          </div>
+        </div>
 
-  <input
-  type="text"
-  value={searchName}
-  onChange={(e) => setSearchName(e.target.value)}
-  placeholder="Cari Nama Anak atau Wali"
-  className="
-    border border-[#81B7A9] rounded px-3 py-1.5 text-sm max-w-[280px]
-    shadow-lg
-    transition-all duration-300 ease-in-out
-    hover:shadow-xl
-    focus:outline-none focus:ring-2 focus:ring-[#81B7A9] focus:shadow-2xl
-  "
+        {/* Action Button */}
+        <button
+          onClick={() => router.push("/terapis/observasi/riwayat")}
+          className="cursor-pointer inline-flex items-center gap-2 bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition-all duration-300 shadow-sm shrink-0 w-full md:w-auto justify-center md:justify-start"
+        >
+          <span>Riwayat Observasi</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
 
-  />
-</div>
+      {/* ================= CATEGORY NAVIGATION ================= */}
+      <div className="grid grid-cols-2 lg:flex lg:flex-wrap gap-2 p-1.5 bg-[#EAF4F2]/50 border border-teal-50/50 rounded-xl w-full lg:w-fit">
+        {kategori.map((kat, idx) => {
+          const isActive = activeKategori === idx;
+          return (
+            <button
+              key={idx}
+              onClick={() => setActiveKategori(idx)}
+              className={`cursor-pointer px-3 py-2 text-[11px] lg:text-sm font-semibold rounded-lg text-center transition-all duration-300 w-full lg:w-auto ${
+                isActive
+                  ? "bg-[#1E5C58] text-white shadow-sm"
+                  : "text-[#1E5C58]/80 hover:bg-white/60 hover:text-[#1E5C58]"
+              }`}
+            >
+              {kat.title}
+            </button>
+          );
+        })}
+      </div>
 
-
-          {/* Tabs kategori usia */}
-<div className="relative flex flex-wrap border-b border-gray-300 mb-4">
-  {kategori.map((kat, idx) => (
-    <button
-      key={idx}
-      onClick={() => setActiveKategori(idx)}
-      className={`
-        relative px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-all duration-300
-        rounded-md
-        ${
-          activeKategori === idx
-            ? "text-[#36315B] shadow-md bg-[#ddfaf2]"
-            : "text-gray-500 hover:text-[#36315B] hover:shadow-sm hover:bg-[#e8f0ed]"
-        }
-      `}
-    >
-      {kat.title}
-      {activeKategori === idx && (
+      {/* ================= TABLE LIST ================= */}
+      <AnimatePresence mode="wait">
         <motion.div
-          layoutId="underline"
-          className="absolute left-0 right-0 bottom-[1px] h-[2px] bg-[#81B7A9]"
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        />
-      )}
-    </button>
-  ))}
-</div>
-
-
-          {/* Tabel anak */}
-          <AnimatePresence mode="wait">
-            <motion.div
-  key={String(activeKategori) + "|" + filterDate + "|" + searchName + "|" + page}
-  initial={{ opacity: 0, y: 12 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -12 }}
-  transition={{ duration: 0.35, ease: "easeOut" }}
-  whileHover={{ y: -2 }}
-  className="
-   bg-white rounded-2xl p-5 md:p-8
-    border border-gray-100
-    transition-all duration-300 ease-out
-    shadow-[0_8px_20px_-5px_rgba(16,185,129,0.20)]
-    hover:shadow-[0_18px_36px_-8px_rgba(16,185,129,0.35)]
-    hover:-translate-y-1
-  "
->
-
-              {isLoading ? (
-                <p className="text-center py-4">Memuat data...</p>
-              ) : isError ? (
-                <p className="text-center py-4 text-red-500">Gagal memuat data</p>
-              ) : filtered.length === 0 ? (
-                <p className="text-center py-4 text-[#36315B]">
-                  Tidak ada data observasi terjadwal
-                </p>
-              ) : (
-                <>
-                  <table className="w-full text-xs sm:text-sm table-auto border-collapse 'min-w-[700px]'">
-                    <thead>
-                      <tr className="border-b border-[#81B7A9] bg-gray-100">
-                        <th className="py-2 px-4 text-center">Nama Anak</th>
-                        <th className="py-2 px-4 text-center">Nama Orang Tua</th>
-                        <th className="py-2 px-4 text-center">Telepon</th>
-                        <th className="py-2 px-4 text-center">Administrator</th>
-                        <th className="py-2 px-4 text-center">Tanggal Observasi</th>
-                        <th className="py-2 px-4 text-center">Waktu</th>
-                        <th className="py-2 px-4 text-center">Aksi</th>
+          key={`${activeKategori}|${filterDate}|${searchName}|${page}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-2xl p-6 md:p-8 border border-teal-50/60 shadow-[0_4px_24px_rgba(30,92,88,0.03)] hover:shadow-[0_8px_32px_rgba(30,92,88,0.06)] transition-shadow duration-300"
+        >
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400">
+              <div className="w-8 h-8 border-4 border-[#81B7A9] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm font-medium">Memuat data anak...</span>
+            </div>
+          ) : isError ? (
+            <div className="text-center py-12 text-red-500 font-medium">
+              Gagal memuat data observasi terjadwal. Silakan coba beberapa saat lagi.
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+              <ClipboardList className="w-10 h-10 text-gray-300" />
+              <span className="text-sm font-medium">Tidak ada data observasi terjadwal</span>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-gray-400 font-semibold">
+                      <th className="py-3 px-4 text-left font-semibold text-xs uppercase tracking-wider">Nama Anak</th>
+                      <th className="py-3 px-4 text-left font-semibold text-xs uppercase tracking-wider">Orang Tua / Wali</th>
+                      <th className="py-3 px-4 text-center font-semibold text-xs uppercase tracking-wider">Telepon</th>
+                      <th className="py-3 px-4 text-left font-semibold text-xs uppercase tracking-wider">Administrator</th>
+                      <th className="py-3 px-4 text-center font-semibold text-xs uppercase tracking-wider">Tanggal</th>
+                      <th className="py-3 px-4 text-center font-semibold text-xs uppercase tracking-wider">Waktu</th>
+                      <th className="py-3 px-4 text-center font-semibold text-xs uppercase tracking-wider">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {paginatedData.map((d, index) => (
+                      <tr
+                        key={d.observation_id ?? `row-${index}`}
+                        className={`hover:bg-[#EAF4F2]/20 transition-colors ${
+                          selected?.observation_id === d.observation_id
+                            ? "bg-[#EAF4F2]/40"
+                            : ""
+                        }`}
+                      >
+                        <td className="py-4 px-4 font-bold text-gray-700">{d.child_name}</td>
+                        <td className="py-4 px-4 text-gray-600 font-medium">{d.guardian_name}</td>
+                        <td className="py-4 px-4 text-center text-gray-600 font-mono text-xs">{d.guardian_phone}</td>
+                        <td className="py-4 px-4 text-gray-600 font-medium">{d.admin_name}</td>
+                        <td className="py-4 px-4 text-center text-gray-500 font-medium">{d.scheduled_date || "-"}</td>
+                        <td className="py-4 px-4 text-center text-gray-500 font-medium">{d.scheduled_time || "-"}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleStartObservasi(d)}
+                              className="cursor-pointer bg-[#1E5C58] hover:bg-[#2E8B83] text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm hover:shadow transition-all"
+                            >
+                              Mulai
+                            </button>
+                            <button
+                              onClick={() => handleViewDetail(d.observation_id!)}
+                              className="cursor-pointer p-1.5 text-gray-400 hover:text-[#1E5C58] hover:bg-gray-100 rounded-lg transition-colors"
+                              title="Detail"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {paginatedData.map((d, index) => (
-                        <tr
-                          key={d.observation_id ?? `row-${index}`}
-                          className={`border-b border-[#81B7A9] hover:bg-gray-50 ${
-                            selected?.observation_id === d.observation_id
-                              ? "bg-[#C0DCD6]"
-                              : ""
-                          }`}
-                        >
-                          <td className="py-2 px-4 text-center">{d.child_name}</td>
-                          <td className="py-2 px-4 text-center">{d.guardian_name}</td>
-                          <td className="py-2 px-4 text-center">{d.guardian_phone}</td>
-                          <td className="py-2 px-4 text-center">{d.admin_name}</td>
-                          <td className="py-2 px-4 text-center">{d.scheduled_date || "-"}</td>
-                          <td className="py-2 px-4 text-center">{d.scheduled_time || "-"}</td>
-                          <td className="py-2 px-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                className="bg-[#81B7A9] hover:bg-[#36315B] text-white text-xs sm:text-sm px-2 sm:px-3 py-1 rounded"
-                                onClick={() => handleStartObservasi(d)}
-                              >
-                                Mulai
-                              </button>
-                              <button
-                                className="p-1 text-[#81B7A9] hover:text-[#36315B]"
-                                onClick={() => handleViewDetail(d.observation_id!)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-                  {/* Pagination */}
-                  <div className="flex justify-center items-center gap-4 mt-4">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
-                      className={`px-3 py-1 rounded border ${
-                        page === 1
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      Prev
-                    </button>
-                    <span className="text-sm font-medium">
-                      Page {page} / {totalPages}
-                    </span>
-                    <button
-                      disabled={page === totalPages || totalPages === 0}
-                      onClick={() => setPage(page + 1)}
-                      className={`px-3 py-1 rounded border ${
-                        page === totalPages || totalPages === 0
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-white hover:bg-gray-100"
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Modal Detail Observasi */}
-          <AnimatePresence>
-            {(loadingDetail || detailObservasi) && (
-              <motion.div
-                className="fixed inset-0 bg-opacity-40 flex items-center justify-center z-50 px-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <motion.div
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0.8 }}
-                  className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-6 relative"
-                >
-                  <button
-                    className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-                    onClick={() => setDetailObservasi(null)}
+              {/* Mobile Card View */}
+              <div className="block lg:hidden space-y-4">
+                {paginatedData.map((d, index) => (
+                  <div
+                    key={d.observation_id ?? `card-${index}`}
+                    className={`bg-[#F4F9F8]/40 border border-teal-50 rounded-2xl p-4 space-y-3 shadow-xs ${
+                      selected?.observation_id === d.observation_id
+                        ? "border-[#1E5C58] bg-[#EAF4F2]/40"
+                        : ""
+                    }`}
                   >
-                    ✕
-                  </button>
-
-                  {loadingDetail ? (
-                    <div className="flex justify-center items-center py-10">
-                      <div className="w-8 h-8 border-4 border-[#81B7A9] border-t-transparent rounded-full animate-spin"></div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-bold text-gray-700">{d.child_name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Wali: {d.guardian_name}</p>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => handleStartObservasi(d)}
+                          className="cursor-pointer bg-[#1E5C58] hover:bg-[#2E8B83] text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm"
+                        >
+                          Mulai
+                        </button>
+                        <button
+                          onClick={() => handleViewDetail(d.observation_id!)}
+                          className="cursor-pointer p-1.5 text-gray-400 hover:text-[#1E5C58] hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <h3 className="text-lg sm:text-xl font-bold text-[#36315B] mb-4">
-                        Detail Observasi
-                      </h3>
-                      <hr className="mb-4 border-[#81B7A9]" />
 
-                      <div className="text-xs sm:text-sm space-y-3 mb-3">
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-teal-50/50 text-gray-500 font-medium">
+                      <div>
+                        <span className="block text-[10px] text-gray-400 uppercase">WhatsApp</span>
+                        <span className="font-mono text-gray-600">{d.guardian_phone || "-"}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 uppercase">Administrator</span>
+                        <span className="text-gray-600">{d.admin_name || "-"}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 uppercase">Tanggal</span>
+                        <span>{d.scheduled_date || "-"}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 uppercase">Waktu</span>
+                        <span>{d.scheduled_time || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                      page === 1
+                        ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                        : "bg-white border-teal-100 hover:bg-teal-50/20 text-[#1E5C58]"
+                    }`}
+                  >
+                    Sebelumnya
+                  </button>
+                  <span className="text-xs font-bold text-gray-500">
+                    Halaman {page} / {totalPages}
+                  </span>
+                  <button
+                    disabled={page === totalPages || totalPages === 0}
+                    onClick={() => setPage(page + 1)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                      page === totalPages || totalPages === 0
+                        ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                        : "bg-white border-teal-100 hover:bg-teal-50/20 text-[#1E5C58]"
+                    }`}
+                  >
+                    Selanjutnya
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ================= DETAIL MODAL ================= */}
+      <AnimatePresence>
+        {(loadingDetail || detailObservasi) && (
+          <motion.div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 15 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] w-full max-w-lg p-6 relative max-h-[85vh] overflow-y-auto border border-teal-50/50 text-[#1E5C58]"
+            >
+              <button
+                className="cursor-pointer absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1.5 rounded-lg transition-colors"
+                onClick={() => setDetailObservasi(null)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {loadingDetail ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 text-gray-400">
+                  <div className="w-8 h-8 border-4 border-[#81B7A9] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm">Memuat detail observasi...</span>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight text-[#1E5C58]">
+                      Detail Observasi Anak
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1">Data janji temu dan identitas observasi</p>
+                  </div>
+
+                  <hr className="border-teal-50" />
+
+                  <div className="space-y-4">
+                    {/* SECTION: DATA ANAK */}
+                    <div className="bg-[#EAF4F2]/30 rounded-xl p-4 border border-teal-50/50 space-y-3">
+                      <div className="flex items-center gap-2 font-bold text-sm text-[#1E5C58]">
+                        <User className="w-4 h-4 text-[#81B7A9]" />
+                        <span>Identitas Anak</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs font-medium text-gray-600">
                         <div>
-                          <h4 className="font-semibold mb-1">Data Anak</h4>
-                          <ul className="list-disc ml-6 space-y-1">
-                            <li>Nama Lengkap: {detailObservasi?.child_name ?? "-"}</li>
-                            <li>Tanggal Lahir: {detailObservasi?.child_birth_date ?? "-"}</li>
-                            <li>
-                              Usia:{" "}
-                              {detailObservasi?.child_age ??
-                                detailObservasi?.age_category ??
-                                "-"}
-                            </li>
-                            <li>Jenis Kelamin: {detailObservasi?.child_gender ?? "-"}</li>
-                            <li>Sekolah: {detailObservasi?.child_school ?? "-"}</li>
-                            <li>Alamat: {detailObservasi?.child_address ?? "-"}</li>
-                            <li>
-                              Tanggal Observasi: {detailObservasi?.scheduled_date ?? "-"}
-                            </li>
-                            <li>
-                              Waktu Observasi:{" "}
-                              {detailObservasi?.time ?? detailObservasi?.scheduled_time ?? "-"}
-                            </li>
-                          </ul>
+                          <span className="block text-[10px] text-gray-400 uppercase">Nama Lengkap</span>
+                          <span className="text-gray-700 font-bold">{detailObservasi?.child_name ?? "-"}</span>
                         </div>
-
                         <div>
-                          <h4 className="font-semibold mb-1">Informasi Orangtua / Wali</h4>
-                          <ul className="list-disc ml-6 space-y-1">
-                            <li>
-                              Nama Orangtua:{" "}
-                              {detailObservasi?.parent_name ??
-                                detailObservasi?.guardian_name ??
-                                "-"}
-                            </li>
-                            <li>Hubungan: {detailObservasi?.parent_type ?? "-"}</li>
-                            <li>
-                              Nomor WhatsApp / Telepon:{" "}
-                              {detailObservasi?.parent_phone ??
-                                detailObservasi?.guardian_phone ??
-                                "-"}
-                            </li>
-                          </ul>
+                          <span className="block text-[10px] text-gray-400 uppercase">Tanggal Lahir</span>
+                          <span>{detailObservasi?.child_birth_date ?? "-"}</span>
                         </div>
-
                         <div>
-                          <h4 className="font-semibold mb-1">Informasi Admin</h4>
-                          <ul className="list-disc ml-6 space-y-1">
-                            <li>
-                              Nama Admin:{" "}
-                              {detailObservasi?.admin_name ??
-                                detailObservasi?.admin ??
-                                detailObservasi?.administrator ??
-                                "-"}
-                            </li>
-                          </ul>
+                          <span className="block text-[10px] text-gray-400 uppercase">Usia</span>
+                          <span>{detailObservasi?.child_age ?? detailObservasi?.age_category ?? "-"}</span>
                         </div>
-
                         <div>
-                          <h4 className="font-semibold mb-1">Keluhan</h4>
-                          <p className="ml-4">{detailObservasi?.child_complaint ?? "Tidak ada keluhan"}</p>
+                          <span className="block text-[10px] text-gray-400 uppercase">Jenis Kelamin</span>
+                          <span>{detailObservasi?.child_gender ?? "-"}</span>
                         </div>
-
                         <div>
-                          <h4 className="font-semibold mb-1">Jenis Layanan</h4>
-                          <p className="ml-4">{detailObservasi?.child_service_choice ?? "-"}</p>
+                          <span className="block text-[10px] text-gray-400 uppercase">Sekolah</span>
+                          <span>{detailObservasi?.child_school ?? "-"}</span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-gray-400 uppercase">Alamat</span>
+                          <span className="break-words">{detailObservasi?.child_address ?? "-"}</span>
                         </div>
                       </div>
-                    </>
-                  )}
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
-      </div>
+                    </div>
+
+                    {/* SECTION: DATA WALI */}
+                    <div className="bg-[#EAF4F2]/30 rounded-xl p-4 border border-teal-50/50 space-y-3">
+                      <div className="flex items-center gap-2 font-bold text-sm text-[#1E5C58]">
+                        <Phone className="w-4 h-4 text-[#81B7A9]" />
+                        <span>Orang Tua / Wali</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs font-medium text-gray-600">
+                        <div>
+                          <span className="block text-[10px] text-gray-400 uppercase">Nama Orang Tua</span>
+                          <span className="text-gray-700 font-bold">
+                            {detailObservasi?.parent_name ?? detailObservasi?.guardian_name ?? "-"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-gray-400 uppercase">Hubungan</span>
+                          <span>{detailObservasi?.parent_type ?? "-"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="block text-[10px] text-gray-400 uppercase">Nomor WhatsApp</span>
+                          <span className="font-mono">{detailObservasi?.parent_phone ?? detailObservasi?.guardian_phone ?? "-"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SECTION: DATA LAYANAN & LAINNYA */}
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="bg-white border border-teal-100 rounded-xl p-3.5 space-y-1">
+                        <span className="block text-[10px] text-gray-400 uppercase font-bold">Jenis Layanan</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold">
+                          <Heart className="w-3.5 h-3.5 text-rose-400" />
+                          <span>{detailObservasi?.child_service_choice ?? "-"}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-teal-100 rounded-xl p-3.5 space-y-1">
+                        <span className="block text-[10px] text-gray-400 uppercase font-bold">Waktu Jadwal</span>
+                        <div className="flex items-center gap-1.5 text-xs font-bold">
+                          <Clock className="w-3.5 h-3.5 text-[#81B7A9]" />
+                          <span>{detailObservasi?.time ?? detailObservasi?.scheduled_time ?? "-"}</span>
+                        </div>
+                      </div>
+
+                      <div className="col-span-2 bg-white border border-teal-100 rounded-xl p-3.5 space-y-1">
+                        <span className="block text-[10px] text-gray-400 uppercase font-bold">Keluhan</span>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {detailObservasi?.child_complaint || "Tidak ada keluhan tertulis"}
+                        </p>
+                      </div>
+
+                      <div className="col-span-2 bg-white border border-teal-100 rounded-xl p-3.5 space-y-1">
+                        <span className="block text-[10px] text-gray-400 uppercase font-bold">Administrator Pendaftar</span>
+                        <span className="text-xs font-bold text-gray-700">
+                          {detailObservasi?.admin_name ?? detailObservasi?.admin ?? detailObservasi?.administrator ?? "-"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

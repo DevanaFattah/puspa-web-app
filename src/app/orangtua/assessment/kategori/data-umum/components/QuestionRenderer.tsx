@@ -29,9 +29,11 @@ export default function QuestionRenderer({
         typeof opt === "string" ? opt : opt?.value ?? opt?.label ?? String(opt)
     );
 
+    const isFullWidth = ["table", "textarea", "multi"].includes(q.answer_type);
+
     return (
-        <div>
-            <label className="block font-medium text-gray-700 mb-1 text-xs md:text-sm">
+        <div className={`space-y-2 p-4 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)] ${isFullWidth ? "col-span-full" : "col-span-full md:col-span-1"}`}>
+            <label className="block font-bold text-[#1E5C58] text-xs md:text-sm leading-relaxed">
                 {q.question_number ? `${q.question_number}. ` : ""}
                 {q.question_text}
             </label>
@@ -116,7 +118,7 @@ export default function QuestionRenderer({
 function TextQuestion({ value, onChange }: { value: any; onChange: (v: string) => void }) {
     return (
         <input
-            className="border rounded-md p-2 w-full text-xs md:text-sm"
+            className="w-full border border-gray-200 p-3 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white"
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
         />
@@ -129,7 +131,7 @@ function NumberQuestion({ value, onChange }: { value: any; onChange: (v: string)
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
-            className="border rounded-md p-2 w-full sm:w-32 text-xs md:text-sm"
+            className="w-full sm:w-36 border border-gray-200 p-3 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white"
             value={value ?? ""}
             onChange={(e) => {
                 const v = e.target.value;
@@ -145,7 +147,7 @@ function TextareaQuestion({ value, onChange }: { value: any; onChange: (v: strin
     return (
         <textarea
             rows={3}
-            className="border rounded-md p-2 w-full text-xs md:text-sm"
+            className="w-full border border-gray-200 p-3 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white resize-y min-h-[90px]"
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
         />
@@ -163,7 +165,7 @@ function SelectQuestion({
 }) {
     return (
         <select
-            className="border rounded-md p-2 text-xs md:text-sm w-full sm:w-auto"
+            className="w-full sm:w-auto border border-gray-200 p-3 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white cursor-pointer"
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
         >
@@ -189,16 +191,16 @@ function RadioQuestion({
     onChange: (v: string) => void;
 }) {
     return (
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-1.5">
             {options.map((opt, idx) => (
-                <label key={idx} className="flex items-center gap-2 text-xs md:text-sm">
+                <label key={idx} className="flex items-center gap-2.5 text-xs md:text-sm font-semibold text-gray-650 cursor-pointer select-none">
                     <input
                         type="radio"
                         name={`radio-${qid}`}
                         value={opt}
                         checked={value === opt}
                         onChange={(e) => onChange(e.target.value)}
-                        className="accent-[#409E86]"
+                        className="accent-[#2B7A75] w-4.5 h-4.5 cursor-pointer"
                     />
                     {opt}
                 </label>
@@ -217,14 +219,14 @@ function CheckboxQuestion({
     onToggle: (v: string) => void;
 }) {
     return (
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-1.5">
             {options.map((opt, idx) => (
-                <label key={idx} className="flex items-center gap-2 text-xs md:text-sm">
+                <label key={idx} className="flex items-center gap-2.5 text-xs md:text-sm font-semibold text-gray-650 cursor-pointer select-none">
                     <input
                         type="checkbox"
                         checked={Array.isArray(value) && value.includes(opt)}
                         onChange={() => onToggle(opt)}
-                        className="accent-[#409E86]"
+                        className="accent-[#2B7A75] w-4.5 h-4.5 rounded cursor-pointer"
                     />
                     {opt}
                 </label>
@@ -245,29 +247,31 @@ function RadioWithTextQuestion({
     onChange: (v: any) => void;
 }) {
     return (
-        <div className="mt-2 space-y-3">
-            {options.map((opt, idx) => (
-                <label key={idx} className="flex items-center gap-2 text-xs md:text-sm">
-                    <input
-                        type="radio"
-                        name={`radio-${qid}`}
-                        value={opt}
-                        checked={value?.value === opt}
-                        onChange={() => onChange({ value: opt, note: "" })}
-                        className="accent-[#409E86]"
-                    />
-                    {opt}
-                </label>
-            ))}
+        <div className="mt-1.5 space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                {options.map((opt, idx) => (
+                    <label key={idx} className="flex items-center gap-2.5 text-xs md:text-sm font-semibold text-gray-650 cursor-pointer select-none">
+                        <input
+                            type="radio"
+                            name={`radio-${qid}`}
+                            value={opt}
+                            checked={value?.value === opt}
+                            onChange={() => onChange({ value: opt, note: "" })}
+                            className="accent-[#2B7A75] w-4.5 h-4.5 cursor-pointer"
+                        />
+                        {opt}
+                    </label>
+                ))}
+            </div>
 
             {(value?.value === "Tidak" ||
                 value?.value === "Belum Imunisasi" ||
                 value?.value === "Tidak Lengkap") && (
                     <input
-                        className="border rounded-md p-2 w-full text-xs md:text-sm"
+                        className="w-full border border-gray-200 p-3 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white mt-2"
                         value={value?.note ?? ""}
                         onChange={(e) => onChange({ ...(value || {}), note: e.target.value })}
-                        placeholder="Keterangan"
+                        placeholder="Keterangan / Alasan detail"
                     />
                 )}
         </div>
@@ -278,10 +282,12 @@ function MultiQuestion({
     value,
     fields,
     onChange,
+    color = "#2B7A75"
 }: {
     value: any;
     fields: string[];
     onChange: (v: any[]) => void;
+    color?: string;
 }) {
     const rows = Array.isArray(value) ? value : [];
 
@@ -304,28 +310,38 @@ function MultiQuestion({
     };
 
     return (
-        <div className="space-y-3 mt-2">
+        <div className="space-y-3 mt-1.5">
             {rows.map((row: any, index: number) => (
-                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
                     {fields.map((f) => (
                         <input
                             key={f}
-                            className="border p-2 rounded-md text-xs md:text-sm w-full sm:w-auto"
+                            className="w-full sm:w-auto flex-1 border border-gray-200 p-2.5 rounded-xl text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none bg-white transition-all duration-200"
                             value={row[f] || ""}
                             onChange={(e) => updateRow(index, f, e.target.value)}
                             placeholder={f}
                         />
                     ))}
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-end">
                         {index === rows.length - 1 && (
-                            <button type="button" className="text-[#6BB1A0] p-2" onClick={addRow}>
-                                <FolderPlus size={18} className="text-blue-500" />
+                            <button
+                                type="button"
+                                className="p-2.5 hover:bg-teal-50 rounded-xl text-[#2B7A75] transition-colors cursor-pointer"
+                                onClick={addRow}
+                                title="Tambah baris"
+                            >
+                                <FolderPlus size={18} />
                             </button>
                         )}
 
                         {index > 0 && (
-                            <button type="button" className="text-red-500 p-2" onClick={() => removeRow(index)}>
+                            <button
+                                type="button"
+                                className="p-2.5 hover:bg-red-50 rounded-xl text-red-500 transition-colors cursor-pointer"
+                                onClick={() => removeRow(index)}
+                                title="Hapus baris"
+                            >
                                 <Trash size={18} />
                             </button>
                         )}
@@ -336,10 +352,10 @@ function MultiQuestion({
             {rows.length === 0 && (
                 <button
                     type="button"
-                    className="text-[#6BB1A0] flex items-center gap-2 text-xs md:text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 hover:bg-[#2B7A75]/10 text-[#2B7A75] text-xs font-bold rounded-xl transition-all cursor-pointer"
                     onClick={addRow}
                 >
-                    <Plus size={18} /> Tambah
+                    <Plus size={14} /> Tambah Data
                 </button>
             )}
         </div>
@@ -358,17 +374,17 @@ function TableQuestion({
     onCellChange: (qid: any, label: string, value: any) => void;
 }) {
     if (!Array.isArray(rows) || rows.length === 0) {
-        return <p className="text-xs md:text-sm">Tidak ada baris.</p>;
+        return <p className="text-xs md:text-sm text-gray-400">Tidak ada baris.</p>;
     }
 
     return (
-        <div className="mt-2 space-y-2 overflow-x-auto">
-            <div className="min-w-max">
+        <div className="mt-1.5 space-y-2 overflow-x-auto">
+            <div className="min-w-max space-y-2.5">
                 {rows.map((label, idx) => (
-                    <div key={idx} className="flex items-center gap-4 mb-2">
-                        <span className="w-32 sm:w-48 text-xs md:text-sm">{label}</span>
+                    <div key={idx} className="flex items-center gap-4 p-3 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <span className="w-40 sm:w-56 text-xs md:text-sm font-semibold text-gray-700">{label}</span>
                         <input
-                            className="border p-2 rounded-md w-24 sm:w-32 text-xs md:text-sm"
+                            className="border border-gray-200 p-2.5 rounded-xl w-32 sm:w-44 text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none bg-white transition-all duration-200"
                             value={(value && value[label]) ?? ""}
                             onChange={(e) => onCellChange(qid, label, e.target.value)}
                         />

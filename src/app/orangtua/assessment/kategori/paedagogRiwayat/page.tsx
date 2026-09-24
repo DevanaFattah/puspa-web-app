@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react"; // Tambahkan Suspense
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { X, ChevronRight, ArrowLeft } from "lucide-react";
 import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
 
 import {
@@ -12,7 +13,6 @@ import {
   ParentAssessmentType,
 } from "@/lib/api/asesmentTerapiOrtu";
 
-/* ===================== TYPES ===================== */
 type AnswerItem = {
   question_id: string;
   question_text: string;
@@ -24,20 +24,6 @@ type AnswerItem = {
 
 type Aspect = { key: string; label: string; };
 
-// --- KOMPONEN UTAMA (Wrapper dengan Suspense) ---
-export default function PaedagogFormPageReadOnly() {
-  return (
-    <Suspense fallback={
-      <div className="p-10 text-center text-lg font-medium text-[#36315B]">
-        Memuat halaman...
-      </div>
-    }>
-      <PaedagogRiwayatContent />
-    </Suspense>
-  );
-}
-
-// --- SUB-KOMPONEN KONTEN (Logika Asli Anda) ---
 function PaedagogRiwayatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,11 +38,11 @@ function PaedagogRiwayatContent() {
   const [activeAspectKey, setActiveAspectKey] = useState("");
 
   const steps = [
-    "Data Umum",
-    "Data Fisioterapi",
-    "Data Terapi Okupasi",
-    "Data Terapi Wicara",
-    "Data Paedagog",
+    { label: "Data Umum", path: "/orangtua/assessment/kategori/data-umumRiwayat" },
+    { label: "Data Fisioterapi", path: "/orangtua/assessment/kategori/fisioterapiRiwayat" },
+    { label: "Data Terapi Okupasi", path: "/orangtua/assessment/kategori/okupasiRiwayat" },
+    { label: "Data Terapi Wicara", path: "/orangtua/assessment/kategori/wicaraRiwayat" },
+    { label: "Data Paedagog", path: "/orangtua/assessment/kategori/paedagogRiwayat" },
   ];
   const activeStep = 4;
 
@@ -136,159 +122,164 @@ function PaedagogRiwayatContent() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-lg font-medium text-[#36315B]">Memuat jawaban...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Riwayat...</p>
+      </div>
+    );
+  }
 
   return (
-    <ResponsiveOrangtuaLayout>
-      <div className="p-4 sm:p-6 md:p-8 max-w-5xl mx-auto">
-        {/* CLOSE BUTTON */}
-        <div className="flex justify-end mb-4 md:mb-6">
-          <button
-            onClick={() =>
-              router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)
-            }
-            className="font-bold text-2xl text-[#36315B] hover:text-red-500 transition-colors p-2"
-            aria-label="Tutup"
-          >
-            ✕
-          </button>
+    <ResponsiveOrangtuaLayout maxWidth="max-w-none">
+      {/* Header section with back & close actions */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 text-[#1E5C58]">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Riwayat: V. Data Paedagog</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Melihat kembali riwayat pengisian kesiapan belajar, akademis, dan kemandirian perilaku anak Anda.</p>
         </div>
+        <button
+          onClick={() => router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)}
+          className="flex items-center justify-center p-2.5 bg-white border border-teal-50 rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm transition-colors cursor-pointer"
+          aria-label="Tutup"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-        {/* STEP PROGRESS - Optimized for Mobile Scrolling */}
-        <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex items-start justify-between min-w-[600px] md:min-w-0 md:justify-center gap-2 px-2">
-            {steps.map((step, i) => {
-              const isActive = i === activeStep;
-              return (
-                <div key={i} className="flex items-start flex-1 last:flex-none gap-2">
-                  <div className="flex flex-col items-center min-w-[80px]">
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300 ${
-                        isActive
-                          ? "bg-[#6BB1A0] border-[#6BB1A0] text-white shadow-sm"
-                          : "bg-white border-gray-300 text-gray-400"
-                      }`}
-                    >
-                      {i + 1}
-                    </div>
-                    <span
-                      className={`mt-2 text-[11px] md:text-sm text-center leading-tight ${
-                        isActive ? "font-semibold text-[#36315B]" : "text-gray-400"
-                      }`}
-                    >
-                      {step}
-                    </span>
+      {/* STEP PROGRESS - Horizontal Scroll pada Mobile */}
+      <div className="mb-6 md:mb-10 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex items-center min-w-max md:min-w-0 md:justify-center px-4 md:px-0">
+          {steps.map((step, i) => {
+            const isCompleted = i < activeStep;
+            const isActive = i === activeStep;
+            return (
+              <div key={i} className="flex items-center">
+                <div 
+                  className="flex flex-col items-center text-center space-y-1.5 md:space-y-2 cursor-pointer group" 
+                  onClick={() => router.push(`${step.path}?assessment_id=${assessmentId}`)}
+                >
+                  <div
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-[10px] md:text-sm font-extrabold border-2 transition-all duration-300 ${
+                      isActive
+                        ? "bg-[#2B7A75] border-[#2B7A75] text-white shadow-md shadow-teal-500/20"
+                        : isCompleted
+                          ? "bg-teal-50/50 border-[#2B7A75]/30 text-[#2B7A75]"
+                          : "bg-gray-100 border-gray-200 text-gray-400"
+                    }`}
+                  >
+                    {i + 1}
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className="flex-1 h-px bg-gray-300 mt-4 min-w-[20px]" />
-                  )}
+                  <span
+                    className={`text-[10px] md:text-xs font-bold transition-colors ${
+                      isActive ? "text-[#1E5C58]" : "text-gray-400 group-hover:text-gray-600"
+                    } max-w-[70px] md:max-w-none leading-tight`}
+                  >
+                    {step.label}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ASPEK DROPDOWN - Full width on mobile */}
-        <div className="mb-6 flex justify-center md:justify-end">
-          <div className="w-full md:w-auto">
-            <label className="block text-xs font-bold text-gray-500 mb-1 md:hidden">Pilih Aspek:</label>
-            <select
-              value={activeAspectKey}
-              onChange={(e) => setActiveAspectKey(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2.5 w-full md:w-72 bg-white text-sm focus:ring-2 focus:ring-[#6BB1A0] outline-none shadow-sm"
-            >
-              {aspects.map((asp) => (
-                <option key={asp.key} value={asp.key}>
-                  {asp.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* CONTENT CARD */}
-        <div className="bg-white rounded-2xl p-5 md:p-8 shadow-sm border border-gray-100 space-y-8">
-          {Object.keys(sectionGroups).length > 0 ? (
-            Object.keys(sectionGroups).map((section) => (
-              <div key={section} className="animate-fadeIn">
-                <h3 className="font-bold text-[#36315B] text-lg mb-4 border-b pb-2">
-                  {section}
-                </h3>
-                <div className="space-y-4">
-                  {sectionGroups[section].map((q, i) => (
-                    <div key={q.question_id} className="bg-gray-50/50 p-4 rounded-xl border border-gray-100">
-                      <p className="font-semibold text-[#36315B] text-sm md:text-base mb-2">
-                        {i + 1}. {q.question_text}
-                      </p>
-                      <input
-                        type="text"
-                        value={q.answer_value ?? "-"}
-                        readOnly
-                        disabled
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 bg-gray-100/50 text-gray-700 text-sm cursor-not-allowed"
-                      />
-                      {q.note && (
-                        <div className="mt-2 flex gap-2 items-start bg-blue-50/50 p-2 rounded-lg">
-                          <span className="text-xs font-bold text-blue-600 uppercase">Catatan:</span>
-                          <p className="text-sm text-gray-600">{q.note}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {i < steps.length - 1 && (
+                  <div
+                    className={`h-0.5 transition-all duration-300 mx-2 md:mx-4 translate-y-[-10px] md:translate-y-[-14px] rounded-full ${
+                      i < activeStep ? "bg-[#2B7A75] w-6 md:w-16" : "bg-gray-200 w-4 md:w-12"
+                    }`}
+                  />
+                )}
               </div>
-            ))
-          ) : (
-            <div className="text-center py-10 text-gray-400 italic">
-              Tidak ada data riwayat untuk aspek ini.
-            </div>
-          )}
-        </div>
-
-        {/* ASPEK NAVIGATION - Responsive buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
-          <button
-            onClick={handlePrevAspect}
-            disabled={currentIndex === 0}
-            className={`px-6 py-3 rounded-xl font-bold border transition-all duration-200 w-full sm:w-auto text-sm md:text-base flex items-center justify-center gap-2 ${
-              currentIndex === 0
-                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                : "bg-white text-[#36315B] border-gray-300 hover:bg-gray-50 active:scale-95"
-            }`}
-          >
-            <span>←</span> Sebelumnya
-          </button>
-          
-          <button
-            onClick={handleNextAspect}
-            disabled={currentIndex === aspects.length - 1}
-            className={`px-8 py-3 rounded-xl font-bold transition-all duration-200 w-full sm:w-auto text-sm md:text-base flex items-center justify-center gap-2 ${
-              currentIndex === aspects.length - 1
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-[#6BB1A0] text-white hover:bg-[#5aa191] active:scale-95 shadow-lg shadow-[#6BB1A0]/20"
-            }`}
-          >
-            Selanjutnya <span>→</span>
-          </button>
+            );
+          })}
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out forwards;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      {/* ASPEK SELECT */}
+      <div className="mb-6 flex justify-end">
+        <div className="relative w-full sm:w-64">
+          <select
+            value={activeAspectKey}
+            onChange={(e) => setActiveAspectKey(e.target.value)}
+            className="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-xs md:text-sm font-bold text-[#1E5C58] focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none w-full transition-all shadow-sm cursor-pointer"
+          >
+            {aspects.map((asp) => (
+              <option key={asp.key} value={asp.key}>
+                {asp.label}
+              </option>
+            ))}
+          </select>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#2B7A75] text-xs font-bold font-mono">▼</span>
+        </div>
+      </div>
+
+      {/* CONTENT CARD */}
+      <div className="bg-white rounded-3xl border border-teal-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-5 md:p-8 w-full space-y-8 animate-in fade-in duration-300">
+        {Object.keys(sectionGroups).length > 0 ? (
+          Object.keys(sectionGroups).map((section) => (
+            <div key={section} className="space-y-4">
+              <h3 className="font-extrabold text-[#1E5C58] text-base md:text-lg border-b border-gray-100 pb-3">
+                {section}
+              </h3>
+              <div className="space-y-4">
+                {sectionGroups[section].map((q, i) => (
+                  <div key={q.question_id} className="p-5 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)] space-y-3">
+                    <p className="font-bold text-[#1E5C58] text-xs md:text-sm">
+                      {i + 1}. {q.question_text}
+                    </p>
+                    <div className="w-full border border-gray-150 rounded-xl p-3.5 bg-gray-50/40 text-gray-700 text-xs md:text-sm shadow-inner min-h-[44px] flex items-center">
+                      {q.answer_value ?? <span className="text-gray-400 italic">Belum dijawab</span>}
+                    </div>
+                    {q.note && (
+                      <div className="mt-2.5 flex items-start gap-2 text-xs italic text-gray-400 ml-2">
+                        <span className="font-bold text-[#2B7A75]">Catatan:</span>
+                        <span>{q.note}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-400 font-semibold text-sm">
+            Tidak ada data riwayat untuk aspek ini.
+          </div>
+        )}
+      </div>
+
+      {/* ASPEK NAVIGATION */}
+      <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4 border-t border-gray-50 pt-6">
+        <button
+          onClick={handlePrevAspect}
+          disabled={currentIndex === 0}
+          className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl font-bold text-xs transition-all w-full sm:w-auto
+            disabled:opacity-0 disabled:pointer-events-none bg-gray-100 text-gray-500 hover:bg-gray-250 cursor-pointer active:scale-95"
+        >
+          <ArrowLeft size={16} />
+          Sebelumnya
+        </button>
+
+        <button
+          onClick={handleNextAspect}
+          disabled={currentIndex === aspects.length - 1}
+          className="flex items-center justify-center gap-2 px-10 py-3.5 rounded-2xl font-bold text-xs transition-all w-full sm:w-auto
+            disabled:opacity-0 disabled:pointer-events-none bg-[#2B7A75] text-white hover:bg-[#1E5C58] shadow-md shadow-teal-500/10 active:scale-95 cursor-pointer"
+        >
+          Selanjutnya
+          <ChevronRight size={16} />
+        </button>
+      </div>
     </ResponsiveOrangtuaLayout>
+  );
+}
+
+export default function PaedagogFormPageReadOnly() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Riwayat...</p>
+      </div>
+    }>
+      <PaedagogRiwayatContent />
+    </Suspense>
   );
 }

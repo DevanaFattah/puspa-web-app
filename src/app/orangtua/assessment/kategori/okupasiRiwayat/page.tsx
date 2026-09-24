@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { X, ChevronRight, ArrowLeft } from "lucide-react";
 import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
 import { getParentAssessmentAnswers, ParentSubmitType } from "@/lib/api/asesmentTerapiOrtu";
 import { getParentAssessmentQuestions, ParentAssessmentType } from "@/lib/api/asesmentTerapiOrtu";
 
-// =====================
-// TYPE
-// =====================
 type Q = { id: string; text: string; type?: string; options?: string[]; };
 type Category = { id: string; title: string; type: string; questions: Q[]; };
 
@@ -21,7 +19,7 @@ function tryParseMaybeJson(v: any) {
   try { return JSON.parse(v); } catch { return v; }
 }
 
-export default function DataTerapiOkupasiPageReadOnly() {
+function OkupasiRiwayatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const assessmentId = searchParams.get("assessment_id") || null;
@@ -31,14 +29,13 @@ export default function DataTerapiOkupasiPageReadOnly() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [loading, setLoading] = useState(true);
 
-
   const lastIndex = categories.length - 1;
   const steps = [
-    "Data Umum",
-    "Data Fisioterapi",
-    "Data Terapi Okupasi",
-    "Data Terapi Wicara",
-    "Data Paedagog",
+    { label: "Data Umum", path: "/orangtua/assessment/kategori/data-umumRiwayat" },
+    { label: "Data Fisioterapi", path: "/orangtua/assessment/kategori/fisioterapiRiwayat" },
+    { label: "Data Terapi Okupasi", path: "/orangtua/assessment/kategori/okupasiRiwayat" },
+    { label: "Data Terapi Wicara", path: "/orangtua/assessment/kategori/wicaraRiwayat" },
+    { label: "Data Paedagog", path: "/orangtua/assessment/kategori/paedagogRiwayat" },
   ];
   const activeStep = 2;
 
@@ -93,31 +90,30 @@ export default function DataTerapiOkupasiPageReadOnly() {
   const goNext = () => { if (activeIdx < lastIndex) setActiveIdx((i) => i + 1); };
   const goPrev = () => { if (activeIdx > 0) setActiveIdx((i) => i - 1); };
 
-  const inputClass = "appearance-none w-5 h-5 rounded border border-gray-400 checked:bg-[#6BB1A0] disabled:checked:bg-[#6BB1A0] checked:border-[#6BB1A0] relative before:content-['✔'] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:text-white before:text-sm";
-  const radioClass = "appearance-none w-5 h-5 rounded-full border border-gray-400 checked:bg-[#6BB1A0] disabled:checked:bg-[#6BB1A0] checked:border-[#6BB1A0] relative before:content-['✔'] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:text-white before:text-sm";
+  const radioClass = "appearance-none w-4.5 h-4.5 rounded-full border border-gray-300 checked:bg-[#2B7A75] checked:border-[#2B7A75] relative before:content-['✔'] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:text-white before:text-[9px] cursor-not-allowed";
+  const checkboxClass = "appearance-none w-4.5 h-4.5 rounded border border-gray-300 checked:bg-[#2B7A75] checked:border-[#2B7A75] relative before:content-['✔'] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:text-white before:text-[9px] cursor-not-allowed";
 
-  // Table optimized for mobile (Card style) and Desktop
   const Radio3Table = ({ questions }: { questions: Q[] }) => {
     const opts = ["Ya", "Tidak", "Kadang-kadang"];
     return (
       <div className="w-full">
         {/* DESKTOP VIEW */}
         <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-base border-separate border-spacing-y-3">
+          <table className="w-full text-xs md:text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="text-[#36315B] font-semibold">
-                <th className="text-left w-[55%]">Pertanyaan</th>
-                {opts.map((opt) => (<th key={opt} className="text-center w-[15%]">{opt}</th>))}
+              <tr className="text-[#1E5C58] font-bold">
+                <th className="text-left w-[55%] pb-2">Pertanyaan</th>
+                {opts.map((opt) => (<th key={opt} className="text-center w-[15%] pb-2">{opt}</th>))}
               </tr>
             </thead>
             <tbody>
               {questions.map((q, idx) => {
                 const val = answers[q.id];
                 return (
-                  <tr key={q.id} className="border-b border-gray-200">
-                    <td className="py-3 text-base text-[#36315B]">{idx + 1}. {q.text}</td>
+                  <tr key={q.id} className="bg-gray-50/30 border border-gray-150 rounded-2xl">
+                    <td className="py-3 px-4 text-[#1E5C58] font-bold text-xs md:text-sm rounded-l-2xl border-y border-l border-gray-100">{idx + 1}. {q.text}</td>
                     {opts.map((opt) => (
-                      <td key={opt} className="text-center py-3">
+                      <td key={opt} className="text-center py-3 border-y border-gray-100 last:border-r last:rounded-r-2xl">
                         <input type="radio" checked={val === opt} readOnly disabled className={radioClass} />
                       </td>
                     ))}
@@ -128,18 +124,18 @@ export default function DataTerapiOkupasiPageReadOnly() {
           </table>
         </div>
 
-        {/* MOBILE & TABLET VIEW (Card style) */}
+        {/* MOBILE VIEW */}
         <div className="block md:hidden space-y-4">
           {questions.map((q, idx) => {
             const val = answers[q.id];
             return (
-              <div key={q.id} className="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
-                <p className="text-sm font-medium text-[#36315B] mb-3">{idx + 1}. {q.text}</p>
+              <div key={q.id} className="p-4 rounded-2xl border border-gray-150 bg-gray-50/50">
+                <p className="text-xs font-bold text-[#1E5C58] mb-3">{idx + 1}. {q.text}</p>
                 <div className="flex justify-between items-center gap-2">
                   {opts.map((opt) => (
-                    <div key={opt} className="flex flex-col items-center gap-1 flex-1">
+                    <div key={opt} className="flex flex-col items-center gap-1.5 flex-1">
                       <input type="radio" checked={val === opt} readOnly disabled className={radioClass} />
-                      <span className="text-[10px] text-gray-500 text-center leading-tight">{opt}</span>
+                      <span className="text-[10px] text-gray-550 font-semibold">{opt}</span>
                     </div>
                   ))}
                 </div>
@@ -154,28 +150,32 @@ export default function DataTerapiOkupasiPageReadOnly() {
   const YesOnlyList = ({ questions }: { questions: Q[] }) => (
     <div className="space-y-3">
       {questions.map((q, i) => (
-        <div key={q.id} className="flex justify-between items-center border-b border-gray-100 pb-3 gap-4">
-          <span className="text-sm md:text-base text-[#36315B] leading-relaxed">{i + 1}. {q.text}</span>
-          <input type="checkbox" checked={answers[q.id] === "Ya" || answers[q.id] === true} readOnly disabled className={`${inputClass} shrink-0`} />
+        <div key={q.id} className="flex justify-between items-center p-3.5 bg-gray-50/40 border border-gray-100 rounded-2xl gap-4">
+          <span className="text-xs md:text-sm text-[#1E5C58] font-bold leading-relaxed">{i + 1}. {q.text}</span>
+          <input type="checkbox" checked={answers[q.id] === "Ya" || answers[q.id] === true} readOnly disabled className={checkboxClass} />
         </div>
       ))}
     </div>
   );
 
   const SliderReadOnlyList = ({ questions }: { questions: Q[] }) => (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {questions.map((q, i) => {
         const value = typeof answers[q.id] === "number" ? Number(answers[q.id]) : 1;
         return (
-          <div key={q.id} className="bg-white md:bg-transparent p-4 md:p-0 rounded-xl border border-gray-100 md:border-0 md:border-b md:pb-6">
-            <p className="text-sm md:text-base text-[#36315B] mb-4 font-medium leading-relaxed">
+          <div key={q.id} className="p-5 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)]">
+            <p className="text-xs md:text-sm text-[#1E5C58] mb-4 font-bold leading-relaxed">
               {i + 1}. {q.text}
             </p>
-            <div className="px-2">
-              <input type="range" min={1} max={5} step={1} value={value} readOnly className="w-full accent-[#6BB1A0] cursor-default" />
-              <div className="flex justify-between text-xs font-bold text-gray-400 mt-2 px-1">
+            <div className="bg-gray-50/40 p-4 rounded-xl border border-gray-100/50">
+              <div className="flex justify-between items-center mb-4">
+                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Skala Penilaian</span>
+                 <span className="bg-[#2B7A75] text-white px-3 py-1 rounded-lg text-xs font-bold shadow-sm">{value}</span>
+              </div>
+              <input type="range" min={1} max={5} step={1} value={value} readOnly className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-default accent-[#2B7A75]" />
+              <div className="flex justify-between text-[11px] font-bold text-gray-455 mt-3 px-1">
                 {[1, 2, 3, 4, 5].map((num) => (
-                  <span key={num} className={value === num ? "text-[#6BB1A0]" : ""}>{num}</span>
+                  <span key={num} className={value === num ? "text-[#2B7A75]" : ""}>{num}</span>
                 ))}
               </div>
             </div>
@@ -186,17 +186,21 @@ export default function DataTerapiOkupasiPageReadOnly() {
   );
 
   const CheckboxReadOnlyList = ({ questions }: { questions: Q[] }) => (
-    <div className="space-y-10">
+    <div className="space-y-6">
       {questions.map((q, i) => {
         const selectedValues: string[] = Array.isArray(answers[q.id]) ? answers[q.id] : [];
         return (
-          <div key={q.id} className="space-y-4">
-            <p className="text-sm md:text-base font-bold text-[#36315B] border-l-4 border-[#6BB1A0] pl-3">{i + 1}. {q.text}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div key={q.id} className="p-5 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)] space-y-4">
+            <p className="text-xs md:text-sm font-bold text-[#1E5C58] border-l-4 border-[#2B7A75] pl-3">{i + 1}. {q.text}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {q.options?.map((opt) => (
-                <label key={opt} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/30">
-                  <input type="checkbox" checked={selectedValues.includes(opt)} readOnly disabled className={inputClass} />
-                  <span className="text-sm text-[#36315B]">{opt}</span>
+                <label key={opt} className={`flex items-center gap-3 p-3.5 rounded-xl border text-xs md:text-sm font-semibold select-none ${
+                  selectedValues.includes(opt) 
+                    ? "bg-teal-50/50 border-[#2B7A75] text-[#1E5C58] shadow-sm" 
+                    : "bg-white border-gray-200 text-gray-450"
+                }`}>
+                  <input type="checkbox" checked={selectedValues.includes(opt)} readOnly disabled className={checkboxClass} />
+                  <span>{opt}</span>
                 </label>
               ))}
             </div>
@@ -206,111 +210,142 @@ export default function DataTerapiOkupasiPageReadOnly() {
     </div>
   );
 
-  if (loading) return <div className="flex justify-center items-center p-20 text-[#6BB1A0] font-medium">Memuat data...</div>;
-  if (!currentCategory) return <div className="p-10 text-center text-gray-500">Tidak ada data</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Riwayat...</p>
+      </div>
+    );
+  }
+  if (!currentCategory) return <div className="p-10 text-center text-gray-500 font-semibold">Tidak ada data</div>;
 
   return (
-    <ResponsiveOrangtuaLayout>
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 md:mt-8 pb-10">
-
-        {/* CLOSE BUTTON */}
-        <div className="flex justify-end mb-4 md:mb-6">
-          <button
-            onClick={() =>
-              router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)
-            }
-            className="font-bold text-2xl text-[#36315B] hover:text-red-500 transition-colors p-2"
-            aria-label="Tutup"
-          >
-            ✕
-          </button>
+    <ResponsiveOrangtuaLayout maxWidth="max-w-none">
+      {/* Header section with back & close actions */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 text-[#1E5C58]">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">Riwayat: III. Terapi Okupasi</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Melihat kembali riwayat pengisian data aspek motorik kasar, motorik halus, dan sensorik anak Anda.</p>
         </div>
+        <button
+          onClick={() => router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)}
+          className="flex items-center justify-center p-2.5 bg-white border border-teal-50 rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm transition-colors cursor-pointer"
+          aria-label="Tutup"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-        {/* STEP PROGRESS - Optimized for Mobile Scrolling */}
-        <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex items-start justify-between min-w-[600px] md:min-w-0 md:justify-center gap-2 px-2">
-            {steps.map((step, i) => {
-              const isActive = i === activeStep;
-              return (
-                <div key={i} className="flex items-start flex-1 last:flex-none gap-2">
-                  <div className="flex flex-col items-center min-w-[80px]">
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300 ${
-                        isActive
-                          ? "bg-[#6BB1A0] border-[#6BB1A0] text-white shadow-sm"
-                          : "bg-white border-gray-300 text-gray-400"
-                      }`}
-                    >
-                      {i + 1}
-                    </div>
-                    <span
-                      className={`mt-2 text-[11px] md:text-sm text-center leading-tight ${
-                        isActive ? "font-semibold text-[#36315B]" : "text-gray-400"
-                      }`}
-                    >
-                      {step}
-                    </span>
+      {/* STEP PROGRESS - Horizontal Scroll pada Mobile */}
+      <div className="mb-6 md:mb-10 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex items-center min-w-max md:min-w-0 md:justify-center px-4 md:px-0">
+          {steps.map((step, i) => {
+            const isCompleted = i < activeStep;
+            const isActive = i === activeStep;
+            return (
+              <div key={i} className="flex items-center">
+                <div 
+                  className="flex flex-col items-center text-center space-y-1.5 md:space-y-2 cursor-pointer group" 
+                  onClick={() => router.push(`${step.path}?assessment_id=${assessmentId}`)}
+                >
+                  <div
+                    className={`w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-[10px] md:text-sm font-extrabold border-2 transition-all duration-300 ${
+                      isActive
+                        ? "bg-[#2B7A75] border-[#2B7A75] text-white shadow-md shadow-teal-500/20"
+                        : isCompleted
+                          ? "bg-teal-50/50 border-[#2B7A75]/30 text-[#2B7A75]"
+                          : "bg-gray-100 border-gray-200 text-gray-400"
+                    }`}
+                  >
+                    {i + 1}
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className="flex-1 h-px bg-gray-300 mt-4 min-w-[20px]" />
-                  )}
+                  <span
+                    className={`text-[10px] md:text-xs font-bold transition-colors ${
+                      isActive ? "text-[#1E5C58]" : "text-gray-400 group-hover:text-gray-600"
+                    } max-w-[70px] md:max-w-none leading-tight`}
+                  >
+                    {step.label}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 md:p-10">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-5">
-            <h3 className="text-lg md:text-2xl font-bold text-[#36315B]">Riwayat Asesmen Okupasi</h3>
-          </div>
-
-          {/* Category Content */}
-          <div className="mb-10 animate-in fade-in duration-500">
-            <div className="inline-block px-3 py-1 bg-[#6BB1A0]/10 text-[#6BB1A0] text-[10px] font-bold rounded-full mb-3 uppercase tracking-widest">
-              Bagian {activeIdx + 1} dari {categories.length}
-            </div>
-            <h4 className="text-lg md:text-xl font-bold text-[#36315B] mb-8">{currentCategory.title}</h4>
-
-            <div>
-              {currentCategory.type === "yes_only" && <YesOnlyList questions={currentCategory.questions} />}
-              {currentCategory.type === "radio3" && <Radio3Table questions={currentCategory.questions} />}
-              {currentCategory.type === "slider" && <SliderReadOnlyList questions={currentCategory.questions} />}
-              {currentCategory.type === "checkbox" && <CheckboxReadOnlyList questions={currentCategory.questions} />}
-            </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-between mt-8 gap-4 pt-8 border-t border-gray-100">
-            <button
-              onClick={goPrev}
-              disabled={activeIdx === 0}
-              className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl border-2 border-gray-100 text-gray-500 font-bold hover:bg-gray-50 disabled:opacity-30 transition-all active:scale-95 text-sm md:text-base w-full sm:w-auto"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Sebelumnya
-            </button>
-            <button
-              onClick={goNext}
-              disabled={activeIdx === lastIndex}
-              className="flex items-center justify-center gap-2 px-10 py-3 rounded-xl bg-[#6BB1A0] text-white font-bold hover:bg-[#5aa391] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg shadow-[#6BB1A0]/20 text-sm md:text-base w-full sm:w-auto"
-            >
-              Lanjutkan
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+                {i < steps.length - 1 && (
+                  <div
+                    className={`h-0.5 transition-all duration-300 mx-2 md:mx-4 translate-y-[-10px] md:translate-y-[-14px] rounded-full ${
+                      i < activeStep ? "bg-[#2B7A75] w-6 md:w-16" : "bg-gray-200 w-4 md:w-12"
+                    }`}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      <div className="bg-white rounded-3xl border border-teal-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-5 md:p-8 w-full">
+        {/* Header */}
+        <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex items-center justify-between">
+          <div>
+            <h4 className="text-base md:text-lg font-extrabold text-[#1E5C58]">
+              {currentCategory.title}
+            </h4>
+            <p className="text-[10px] md:text-xs text-gray-400 font-semibold mt-0.5">Bagian {activeIdx + 1} dari {categories.length}</p>
+          </div>
+
+          <div className="flex gap-1">
+            {categories.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  idx === activeIdx ? "w-6 bg-[#2B7A75]" : "w-2 bg-gray-200"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Category Content */}
+        <div className="mb-8 animate-in fade-in duration-300">
+          <div>
+            {currentCategory.type === "yes_only" && <YesOnlyList questions={currentCategory.questions} />}
+            {currentCategory.type === "radio3" && <Radio3Table questions={currentCategory.questions} />}
+            {currentCategory.type === "slider" && <SliderReadOnlyList questions={currentCategory.questions} />}
+            {currentCategory.type === "checkbox" && <CheckboxReadOnlyList questions={currentCategory.questions} />}
+          </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-col-reverse sm:flex-row justify-between mt-8 gap-4 pt-6 border-t border-gray-100">
+          <button
+            onClick={goPrev}
+            disabled={activeIdx === 0}
+            className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl border border-gray-200 text-[#1E5C58] font-bold bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs order-2 sm:order-1 active:scale-95 cursor-pointer text-center"
+          >
+            <ArrowLeft size={14} />
+            Sebelumnya
+          </button>
+          <button
+            onClick={goNext}
+            disabled={activeIdx === lastIndex}
+            className="flex items-center justify-center gap-2 px-10 py-3.5 bg-[#2B7A75] hover:bg-[#1E5C58] text-white rounded-2xl font-bold transition-all shadow-md shadow-teal-500/10 active:scale-95 text-xs w-full sm:w-auto cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-30 disabled:cursor-not-allowed order-1 sm:order-2"
+          >
+            Lanjutkan
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
     </ResponsiveOrangtuaLayout>
+  );
+}
+
+export default function DataTerapiOkupasiPageReadOnly() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Halaman...</p>
+      </div>
+    }>
+      <OkupasiRiwayatContent />
+    </Suspense>
   );
 }

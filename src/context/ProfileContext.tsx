@@ -24,8 +24,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       // Ambil token dari localStorage (pastikan sudah login)
       const token = localStorage.getItem("token");
       if (!token) {
-        console.warn("Token tidak ditemukan, user harus login");
+        console.warn("Token tidak ditemukan, redirect ke halaman login");
         setProfile(null);
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/login";
+        }
         return;
       }
 
@@ -36,10 +39,16 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
       } else {
         console.warn("Gagal memuat profil:", res?.message);
         setProfile(null);
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/login";
+        }
       }
     } catch (err) {
       console.error("Error refreshProfile:", err);
       setProfile(null);
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth/login";
+      }
     }
   };
 

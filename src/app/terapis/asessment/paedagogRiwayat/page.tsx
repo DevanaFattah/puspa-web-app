@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
-
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
+import { useSearchParams, useRouter } from "next/navigation";
+import { ChevronRight, ChevronLeft, ArrowLeft, MessageSquare, ClipboardCheck, Award } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getAssessmentAnswers } from "@/lib/api/asesment";
 
 /* ======================
@@ -31,9 +29,6 @@ const ASPEK_RANGE = [
   { title: "Pengetahuan Umum", from: 105, to: 112 },
 ];
 
-/* ======================
-   HELPERS
-====================== */
 const getAspekByQuestionId = (id: number) => {
   const found = ASPEK_RANGE.find(
     (range) => id >= range.from && id <= range.to
@@ -58,10 +53,15 @@ const groupByAspek = (items: AnswerItem[]): GroupedAnswers => {
   return grouped;
 };
 
-/* ======================
-   PAGE
-====================== */
+const SCORE_LABELS: Record<string, { label: string; color: string; bg: string; text: string }> = {
+  "0": { label: "Buruk", color: "bg-red-500", bg: "bg-red-50", text: "text-red-700" },
+  "1": { label: "Kurang Baik", color: "bg-orange-500", bg: "bg-orange-50", text: "text-orange-700" },
+  "2": { label: "Cukup Baik", color: "bg-yellow-500", bg: "bg-yellow-50", text: "text-yellow-700" },
+  "3": { label: "Baik", color: "bg-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700" },
+};
+
 export default function RiwayatJawabanPaedagogPage() {
+  const router = useRouter();
   const params = useSearchParams();
   const assessmentId = params.get("assessment_id") ?? "";
 
@@ -70,9 +70,6 @@ export default function RiwayatJawabanPaedagogPage() {
   const [answers, setAnswers] = useState<GroupedAnswers>({});
   const [activeAspek, setActiveAspek] = useState("");
 
-  /* ======================
-     FETCH DATA
-  ====================== */
   useEffect(() => {
     if (!assessmentId) {
       setError("assessment_id tidak ditemukan di URL.");
@@ -85,10 +82,7 @@ export default function RiwayatJawabanPaedagogPage() {
         setLoading(true);
         setError("");
 
-        const data = await getAssessmentAnswers(
-          assessmentId,
-          "paedagog"
-        );
+        const data = await getAssessmentAnswers(assessmentId, "paedagog");
 
         if (!Array.isArray(data)) {
           throw new Error("Format data tidak valid");
@@ -108,15 +102,10 @@ export default function RiwayatJawabanPaedagogPage() {
     fetchAnswers();
   }, [assessmentId]);
 
-  /* ======================
-     NAVIGATION LOGIC
-  ====================== */
   const aspekList = Object.keys(answers);
   const currentQuestions = answers[activeAspek] ?? [];
 
-  const currentAspekIndex = aspekList.findIndex(
-    (a) => a === activeAspek
-  );
+  const currentAspekIndex = aspekList.findIndex((a) => a === activeAspek);
 
   const hasPrev = currentAspekIndex > 0;
   const hasNext = currentAspekIndex < aspekList.length - 1;
@@ -131,159 +120,203 @@ export default function RiwayatJawabanPaedagogPage() {
     setActiveAspek(aspekList[currentAspekIndex + 1]);
   };
 
-  /* ======================
-     STATES
-  ====================== */
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center font-medium text-[#36315B]">
-        Memuat riwayat jawaban...
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#81B7A9] border-t-transparent"></div>
+          <p className="text-sm font-semibold text-[#1E5C58]">Memuat riwayat jawaban...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center font-medium text-red-600">
+      <div className="flex min-h-[60vh] items-center justify-center font-medium text-red-600">
         {error}
       </div>
     );
   }
 
-  /* ======================
-     RENDER
-  ====================== */
   return (
-    <div className="flex h-screen font-playpen text-[#36315B]">
-      <SidebarTerapis />
-
-      <div className="flex flex-1 flex-col bg-gray-50">
-        <HeaderTerapis />
-
-        <main className="overflow-y-auto p-6">
-          {/* CLOSE */}
-          <div className="mb-4 flex justify-end">
-            <button
-              onClick={() => (window.location.href = "/terapis/asessment")}
-              className="text-2xl font-bold hover:text-red-500"
-            >
-              ✕
-            </button>
+    <div className="p-4 md:p-6 space-y-4 text-[#1E5C58]">
+      {/* HEADER & ACTION */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-teal-100/50 pb-3">
+        <div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#81B7A9] uppercase tracking-wider">
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            <span>Riwayat Asesmen</span>
           </div>
-
-          {/* TITLE */}
-          <h1 className="mb-6 text-center text-2xl font-bold">
-            PLB | Paedagog {activeAspek}
+          <h1 className="text-lg md:text-xl font-extrabold tracking-tight text-[#1E5C58] mt-0.5">
+            PLB | Paedagog ({activeAspek})
           </h1>
+        </div>
+        <button
+          onClick={() => {
+            const status = params.get("status") || "completed";
+            router.push(`/terapis/asessment?type=paedagog&status=${status}`);
+          }}
+          className="cursor-pointer inline-flex items-center gap-1.5 bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-semibold px-3 py-2 rounded-xl text-xs transition-all duration-300 shadow-[0_4px_12px_rgba(30,92,88,0.15)] hover:shadow-[0_8px_20px_rgba(30,92,88,0.25)] hover:-translate-y-0.5 self-start sm:self-auto"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Kembali ke Daftar</span>
+        </button>
+      </div>
 
-          {/* ASPEK TABS */}
-          <div className="mb-6 flex flex-wrap justify-center gap-3">
-            {aspekList.map((aspek) => {
-              const isActive = aspek === activeAspek;
-              return (
-                <button
-                  key={aspek}
-                  onClick={() => setActiveAspek(aspek)}
-                  className={`rounded-full border px-5 py-2 text-sm font-semibold transition
-                    ${
-                      isActive
-                        ? "border-[#81B7A9] bg-[#EAF4F1] text-[#2E7D6B]"
-                        : "border-gray-300 bg-white hover:bg-gray-100"
-                    }`}
-                >
-                  {aspek}
-                </button>
-              );
-            })}
-          </div>
+      {/* ASPEK CAPSULE TABS */}
+      <div className="flex flex-wrap gap-1.5 p-1 bg-[#EAF4F2]/50 border border-teal-100/30 rounded-xl w-fit">
+        {aspekList.map((aspek) => {
+          const isActive = aspek === activeAspek;
+          return (
+            <button
+              key={aspek}
+              onClick={() => setActiveAspek(aspek)}
+              className={`cursor-pointer px-3 py-1.5 text-[10px] md:text-xs font-bold rounded-lg transition-all duration-300 ${
+                isActive
+                  ? "bg-[#1E5C58] text-white shadow-sm"
+                  : "text-[#1E5C58]/80 hover:bg-white/60 hover:text-[#1E5C58]"
+              }`}
+            >
+              {aspek}
+            </button>
+          );
+        })}
+      </div>
 
-          {/* QUESTIONS */}
-          <div className="rounded-xl bg-white p-2">
+      {/* QUESTIONS CONTAINER */}
+      <div className="space-y-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeAspek}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 gap-4"
+          >
             {currentQuestions.map((q, idx) => {
-              const isTextOnly = typeof q.answer.value === "string";
+              const isTextOnly = typeof q.answer?.value === "string";
+              const scoreVal = String(q.answer?.value ?? "");
+              const selectedScore = SCORE_LABELS[scoreVal];
 
               return (
                 <div
                   key={q.question_id}
-                  className="mb-6 rounded-xl bg-white p-5 shadow-md"
+                  className="bg-white rounded-xl p-4 border border-teal-50 shadow-[0_4px_20px_rgba(30,92,88,0.02)] hover:shadow-[0_6px_24px_rgba(30,92,88,0.05)] transition-all duration-300"
                 >
-                  <p className="mb-3 font-semibold">
-                    {idx + 1}. {q.question_text}
-                  </p>
+                  {/* Aspect Header */}
+                  <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2.5 mb-2.5">
+                    <div className="space-y-0.5">
+                      <span className="inline-block text-[9px] bg-teal-50 text-[#1E5C58] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                        Pertanyaan {idx + 1}
+                      </span>
+                      <h3 className="font-extrabold text-[#1E5C58] text-sm md:text-base leading-relaxed">
+                        {q.question_text}
+                      </h3>
+                    </div>
+                    
+                    {/* Compact Score Badge */}
+                    {!isTextOnly && selectedScore && (
+                      <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${selectedScore.bg} ${selectedScore.text} border border-teal-100/50 whitespace-nowrap`}>
+                        <Award className="w-3 h-3" />
+                        <span>Skor: {scoreVal} ({selectedScore.label})</span>
+                      </div>
+                    )}
+                  </div>
 
+                  {/* ANSWER LAYOUT */}
                   {isTextOnly ? (
-                    <textarea
-                      readOnly
-                      rows={3}
-                      className="w-full rounded-md border bg-gray-100 p-3"
-                      value={q.answer.value as string}
-                    />
+                    <div className="space-y-1.5">
+                      <span className="block text-[9px] text-gray-400 uppercase font-bold tracking-wider">Jawaban Asesor</span>
+                      <div className="bg-teal-50/20 border border-teal-100/30 rounded-lg p-2.5 text-xs font-semibold text-gray-700 leading-relaxed min-h-[48px]">
+                        {q.answer?.value || "-"}
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex items-center gap-4">
-                      <textarea
-                        readOnly
-                        className="flex-[4] rounded-md border bg-gray-100 p-3 text-sm"
-                        value={q.note ?? ""}
-                      />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                      {/* Rating Scale UX Visualizer */}
+                      <div className="lg:col-span-5 space-y-2">
+                        <span className="block text-[9px] text-gray-400 uppercase font-bold tracking-wider">Visualisasi Nilai</span>
+                        <div className="flex flex-col sm:flex-row gap-1.5">
+                          {["0", "1", "2", "3"].map((val) => {
+                            const config = SCORE_LABELS[val];
+                            const isCurrent = scoreVal === val;
+                            return (
+                              <div
+                                key={val}
+                                className={`flex-1 flex flex-col items-center justify-center p-1.5 rounded-lg border text-center transition-all ${
+                                  isCurrent
+                                    ? `${config.bg} border-teal-200 shadow-sm scale-[1.02]`
+                                    : "bg-gray-50/50 border-gray-100 opacity-40"
+                                }`}
+                              >
+                                <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold text-white mb-0.5 ${
+                                  isCurrent ? config.color : "bg-gray-300"
+                                }`}>
+                                  {val}
+                                </span>
+                                <span className={`text-[9px] font-bold ${isCurrent ? config.text : "text-gray-400"}`}>
+                                  {config.label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                      <div className="relative flex-[1]">
-                        <select
-                          disabled
-                          value={String(q.answer.value)}
-                          className="w-80 appearance-none rounded-md border bg-gray-200 py-4 px-2"
-                        >
-                          <option value="0">0 - Buruk</option>
-                          <option value="1">1 - Kurang Baik</option>
-                          <option value="2">2 - Cukup Baik</option>
-                          <option value="3">3 - Baik</option>
-                        </select>
-
-                        <ChevronDown
-                          size={18}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-                        />
+                      {/* Catatan/Keterangan */}
+                      <div className="lg:col-span-7 space-y-1.5">
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <MessageSquare className="w-3 h-3 text-[#81B7A9]" />
+                          <span className="block text-[9px] uppercase font-bold tracking-wider">Keterangan / Catatan Tambahan</span>
+                        </div>
+                        <div className="bg-teal-50/20 border border-teal-100/30 rounded-lg p-2.5 text-xs font-semibold text-gray-700 leading-relaxed min-h-[48px]">
+                          {q.note ? q.note : <span className="text-gray-400 font-normal italic">Tidak ada catatan</span>}
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
               );
             })}
-          </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-          {/* NAVIGATION BUTTONS */}
-          <div className="mt-8 flex items-center justify-between">
-            <button
-              onClick={goPrev}
-              disabled={!hasPrev}
-              className={`rounded-lg px-6 py-3 font-semibold transition
-                ${
-                  hasPrev
-                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    : "cursor-not-allowed bg-gray-100 text-gray-400"
-                }`}
-            >
-              ← Sebelumnya
-            </button>
+      {/* BOTTOM PAGINATION */}
+      <div className="flex items-center justify-between border-t border-teal-100/50 pt-4 mt-4">
+        <button
+          onClick={goPrev}
+          disabled={!hasPrev}
+          className={`cursor-pointer inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-[10px] font-bold transition-all duration-300 ${
+            hasPrev
+              ? "bg-white border-teal-100 text-[#1E5C58] hover:bg-teal-50/20"
+              : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
+          }`}
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span>Sebelumnya</span>
+        </button>
 
-            <span className="text-sm font-medium text-gray-500">
-              {currentAspekIndex + 1} / {aspekList.length}
-            </span>
+        <span className="text-[10px] font-bold text-[#81B7A9] uppercase tracking-widest bg-teal-50/40 px-2.5 py-1 rounded-lg border border-teal-100/30">
+          {currentAspekIndex + 1} / {aspekList.length}
+        </span>
 
-            <button
-              onClick={goNext}
-              disabled={!hasNext}
-              className={`rounded-lg px-6 py-3 font-semibold transition
-                ${
-                  hasNext
-                    ? "bg-[#81B7A9] text-white hover:bg-[#81B7A9]"
-                    : "cursor-not-allowed bg-gray-100 text-gray-400"
-                }`}
-            >
-              Selanjutnya →
-            </button>
-          </div>
-        </main>
+        <button
+          onClick={goNext}
+          disabled={!hasNext}
+          className={`cursor-pointer inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-[10px] font-bold transition-all duration-300 ${
+            hasNext
+              ? "bg-white border-teal-100 text-[#1E5C58] hover:bg-teal-50/20"
+              : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
+          }`}
+        >
+          <span>Selanjutnya</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
 }
+

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-
-import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout"; // Menggunakan layout responsif yang sudah ada
+import { X } from "lucide-react";
+import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
 
 import {
   getParentAssessmentQuestions,
@@ -13,7 +13,7 @@ import {
   ParentSubmitType,
 } from "@/lib/api/asesmentTerapiOrtu";
 
-export default function TerapiWicaraPage() {
+function TerapiWicaraContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -165,7 +165,7 @@ export default function TerapiWicaraPage() {
       );
 
       alert("Jawaban berhasil disimpan!");
-      router.push( `/orangtua/assessment/kategori?assessment_id=${assessmentId}`);
+      router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`);
     } catch (err: any) {
       console.error("Submit error:", err);
       alert(err?.response?.data?.message || "Gagal submit jawaban");
@@ -174,167 +174,209 @@ export default function TerapiWicaraPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Memuat pertanyaan...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Pertanyaan...</p>
+      </div>
+    );
+  }
 
   return (
-    <ResponsiveOrangtuaLayout maxWidth="max-w-4xl"> {/* Tetap menggunakan layout utama Anda */}
-      <div className="text-[#36315B]">
-        
-        {/* Tombol Tutup - Responsif */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)}
-            className="text-[#36315B] hover:text-red-500 font-bold text-2xl transition-colors"
-          >
-            ✕
-          </button>
+    <ResponsiveOrangtuaLayout maxWidth="max-w-none">
+      {/* Header section with back & close actions */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 text-[#1E5C58]">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">IV. Terapi Wicara</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Analisis kemampuan komunikasi verbal, non-verbal, dan artikulasi suara anak Anda.</p>
         </div>
+        <button
+          onClick={() => router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)}
+          className="flex items-center justify-center p-2.5 bg-white border border-teal-50 rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm transition-colors cursor-pointer"
+          aria-label="Tutup"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-        {/* Stepper - Horizontal Scroll pada Mobile */}
-        <div className="flex justify-start md:justify-center mb-12 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex items-center min-w-max px-4 md:px-0">
-            {steps.map((step, i) => (
-              <div key={i} className="flex items-center">
-                <div className="flex flex-col items-center space-y-2">
-                  <div
-                    className={`w-9 h-9 flex items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors ${
-                      i === activeStep
-                        ? "bg-[#6BB1A0] border-[#6BB1A0] text-white shadow-md"
-                        : "bg-gray-100 border-gray-300 text-gray-500"
-                    }`}
-                  >
-                    {i + 1}
-                  </div>
-                  <span className={`text-xs md:text-sm font-medium ${i === activeStep ? "text-[#36315B]" : "text-gray-400"}`}>
-                    {step.label}
-                  </span>
+      {/* Stepper - Horizontal Scroll pada Mobile */}
+      <div className="mb-6 md:mb-10 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex items-center min-w-max md:min-w-0 md:justify-center px-4 md:px-0">
+          {steps.map((step, i) => (
+            <div key={i} className="flex items-center">
+              <div 
+                className="flex flex-col items-center text-center space-y-1.5 md:space-y-2 cursor-pointer group" 
+                onClick={() => router.push(`${step.path}?assessment_id=${assessmentId}`)}
+              >
+                <div
+                  className={`w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-[10px] md:text-sm font-extrabold border-2 transition-all duration-300 ${
+                    i === activeStep
+                      ? "bg-[#2B7A75] border-[#2B7A75] text-white shadow-md shadow-teal-500/20"
+                      : i < activeStep
+                        ? "bg-teal-50/50 border-[#2B7A75]/30 text-[#2B7A75]"
+                        : "bg-gray-100 border-gray-200 text-gray-400"
+                  }`}
+                >
+                  {i + 1}
                 </div>
+                <span
+                  className={`text-[10px] md:text-xs font-bold transition-colors ${
+                    i === activeStep ? "text-[#1E5C58]" : "text-gray-400 group-hover:text-gray-600"
+                  } max-w-[70px] md:max-w-none leading-tight`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div
+                  className={`h-0.5 transition-all duration-300 mx-2 md:mx-4 translate-y-[-10px] md:translate-y-[-14px] rounded-full ${
+                    i < activeStep ? "bg-[#2B7A75] w-6 md:w-16" : "bg-gray-200 w-4 md:w-12"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
-                {i < steps.length - 1 && (
-                  <div className="w-8 md:w-10 h-px bg-gray-300 mx-2 translate-y-[-12px]" />
+      {/* Konten Form Utama */}
+      <div className="bg-white rounded-3xl border border-teal-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-5 md:p-8 w-full">
+        {/* Grid 2 Column */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {questions.map((q) => {
+            if (!shouldShowQuestion(q)) return null;
+
+            const schema = parseSchema(q.extra_schema);
+
+            const radioOptions =
+              schema.options ||
+              (q.answer_options ? JSON.parse(q.answer_options) : []);
+
+            const tableRows = schema.rows || [];
+            const tableColumns = schema.columns || [];
+            
+            const isFullWidth = q.answer_type === "textarea" || q.answer_type === "table";
+
+            return (
+              <div key={q.id} className={`p-4 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)] animate-in fade-in duration-300 ${isFullWidth ? "col-span-full" : "col-span-full md:col-span-1"}`}>
+                <label className="block font-bold text-[#1E5C58] text-xs md:text-sm leading-relaxed mb-3">
+                  {q.question_number}. {q.question_text}
+                </label>
+
+                {/* Input Textarea */}
+                {q.answer_type === "textarea" && (
+                  <textarea
+                    className="w-full border border-gray-200 rounded-xl p-4 h-32 focus:outline-none focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white text-xs md:text-sm resize-y"
+                    value={answers[q.id] || ""}
+                    onChange={(e) => handleChange(q.id, e.target.value)}
+                    placeholder="Tuliskan jawaban lengkap Anda di sini..."
+                  />
+                )}
+
+                {/* Input Text Biasa */}
+                {q.answer_type === "text" && (
+                  <input
+                    type="text"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white text-xs md:text-sm"
+                    value={answers[q.id] || ""}
+                    onChange={(e) => handleChange(q.id, e.target.value)}
+                    placeholder="Masukkan jawaban singkat..."
+                  />
+                )}
+
+                {/* Pilihan Radio Button */}
+                {q.answer_type === "radio" && (
+                  <div className="flex flex-col sm:flex-row sm:gap-6 gap-3">
+                    {radioOptions.map((op: string) => (
+                      <label 
+                        key={op} 
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none text-xs md:text-sm font-semibold ${
+                          answers[q.id] === op 
+                            ? "bg-teal-50/50 border-[#2B7A75]/35 text-[#1E5C58]" 
+                            : "bg-white border-gray-200 text-gray-550 hover:border-gray-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={"q" + q.id}
+                          value={op}
+                          checked={answers[q.id] === op}
+                          onChange={() => handleChange(q.id, op)}
+                          className="accent-[#2B7A75] w-4.5 h-4.5 cursor-pointer"
+                        />
+                        {op}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tabel Pertanyaan - Dioptimalkan untuk Mobile */}
+                {q.answer_type === "table" && (
+                  <div className="space-y-3 mt-3">
+                    {tableRows.map((row: string, idx: number) => (
+                      <div key={idx} className="flex flex-col md:flex-row md:items-center gap-3 p-3 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                        <span className="text-xs md:text-sm font-semibold text-gray-755 md:w-72 leading-relaxed">{row}</span>
+
+                        <div className="flex flex-1 gap-3">
+                          {tableColumns.map((col: string) => (
+                            <input
+                              key={col}
+                              type="text"
+                              placeholder={col}
+                              className="border border-gray-200 rounded-xl p-2.5 flex-1 text-xs md:text-sm focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none bg-white transition-all duration-200"
+                              value={answers[q.id]?.[row]?.[col] || ""}
+                              onChange={(e) =>
+                                handleChange(q.id, {
+                                  ...answers[q.id],
+                                  [row]: {
+                                    ...answers[q.id]?.[row],
+                                    [col]: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Konten Form Utama */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:p-8 transition-all">
-          <div className="space-y-8 md:space-y-10">
-            {questions.map((q) => {
-              if (!shouldShowQuestion(q)) return null;
-
-              const schema = parseSchema(q.extra_schema);
-
-              const radioOptions =
-                schema.options ||
-                (q.answer_options ? JSON.parse(q.answer_options) : []);
-
-              const tableRows = schema.rows || [];
-              const tableColumns = schema.columns || [];
-
-              return (
-                <div key={q.id} className="animate-in fade-in duration-500">
-                  <label className="block font-semibold mb-3 text-sm md:text-base leading-relaxed">
-                    {q.question_number}. {q.question_text}
-                  </label>
-
-                  {/* Input Textarea */}
-                  {q.answer_type === "textarea" && (
-                    <textarea
-                      className="w-full border border-gray-200 rounded-xl p-3 h-32 focus:ring-2 focus:ring-[#6BB1A0] focus:border-transparent outline-none transition-all"
-                      value={answers[q.id] || ""}
-                      onChange={(e) => handleChange(q.id, e.target.value)}
-                      placeholder="Tuliskan jawaban Anda di sini..."
-                    />
-                  )}
-
-                  {/* Input Text Biasa */}
-                  {q.answer_type === "text" && (
-                    <input
-                      type="text"
-                      className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#6BB1A0] outline-none transition-all"
-                      value={answers[q.id] || ""}
-                      onChange={(e) => handleChange(q.id, e.target.value)}
-                    />
-                  )}
-
-                  {/* Pilihan Radio Button */}
-                  {q.answer_type === "radio" && (
-                    <div className="flex flex-wrap gap-4 md:gap-8 mt-2">
-                      {radioOptions.map((op: string) => (
-                        <label key={op} className="flex items-center gap-3 cursor-pointer group">
-                          <input
-                            type="radio"
-                            name={"q" + q.id}
-                            value={op}
-                            checked={answers[q.id] === op}
-                            onChange={() => handleChange(q.id, op)}
-                            className="accent-[#6BB1A0] w-5 h-5 transition-transform group-active:scale-90"
-                          />
-                          <span className="text-sm md:text-base font-medium">{op}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Tabel Pertanyaan - Dioptimalkan untuk Mobile */}
-                  {q.answer_type === "table" && (
-                    <div className="space-y-4 mt-3">
-                      {tableRows.map((row: string, idx: number) => (
-                        <div key={idx} className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 border-b border-gray-100 pb-4 md:pb-2 last:border-0">
-                          <span className="text-sm md:w-72 font-medium text-gray-700">{row}</span>
-
-                          <div className="flex flex-1 gap-2">
-                            {tableColumns.map((col: string) => (
-                              <input
-                                key={col}
-                                type="text"
-                                placeholder={col}
-                                className="border border-gray-200 rounded-lg p-2 flex-1 text-sm focus:border-[#6BB1A0] outline-none transition-all"
-                                value={answers[q.id]?.[row]?.[col] || ""}
-                                onChange={(e) =>
-                                  handleChange(q.id, {
-                                    ...answers[q.id],
-                                    [row]: {
-                                      ...answers[q.id]?.[row],
-                                      [col]: e.target.value,
-                                    },
-                                  })
-                                }
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Tombol Simpan */}
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-end mt-10 gap-3 border-t border-gray-50 pt-6">
           <button
-            className="mt-12 bg-[#6BB1A0] text-white px-6 py-4 rounded-2xl shadow-lg shadow-[#6BB1A0]/20 w-full hover:bg-[#58a88f] active:scale-[0.98] transition-all font-bold text-base disabled:opacity-50"
+            onClick={() => router.push(`/orangtua/assessment/kategori/okupasi?assessment_id=${assessmentId}`)}
+            className="px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-[#1E5C58] rounded-2xl font-bold active:scale-95 transition-all w-full sm:w-auto text-xs cursor-pointer text-center"
+          >
+            Sebelumnya
+          </button>
+          <button
+            className="bg-[#2B7A75] hover:bg-[#1E5C58] text-white px-10 py-3.5 rounded-2xl shadow-md shadow-teal-500/10 active:scale-95 transition-all font-bold text-xs disabled:opacity-50 w-full sm:w-auto cursor-pointer text-center"
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? "Menyimpan..." : "Simpan Jawaban"}
+            {submitting ? "Menyimpan..." : "Simpan & Lanjutkan"}
           </button>
         </div>
       </div>
-      
-      {/* Sembunyikan scrollbar stepper pada mobile */}
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </ResponsiveOrangtuaLayout>
+  );
+}
+
+export default function TerapiWicaraPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Halaman...</p>
+      </div>
+    }>
+      <TerapiWicaraContent />
+    </Suspense>
   );
 }

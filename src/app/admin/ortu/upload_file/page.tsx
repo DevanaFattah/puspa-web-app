@@ -5,14 +5,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams, useRouter } from "next/navigation";
 
 import { uploadAssessmentReport } from "@/lib/api/asesmentReport";
+import { handleApiError, showSuccessToast } from "@/lib/api-error";
 
 export default function UploadFilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // ⬇️ SESUAI handleOrtuRoute → ?id=jadwalId
-// ✅ BENAR
-const jadwalId = Number(searchParams.get("assessment_id"));
+  // ✅ BENAR
+  const jadwalId = Number(searchParams.get("assessment_id"));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,18 +34,18 @@ const jadwalId = Number(searchParams.get("assessment_id"));
 
   const handleSubmitUpload = async () => {
     if (!selectedFile || !jadwalId) {
-      alert("File atau data jadwal tidak valid");
+      handleApiError(null, "File atau data jadwal tidak valid");
       return;
     }
 
     try {
       setUploadLoading(true);
       await uploadAssessmentReport(jadwalId, selectedFile);
-      alert("File berhasil diupload");
+      showSuccessToast("File berhasil diupload");
       router.back();
     } catch (error) {
       console.error(error);
-      alert("Gagal upload file");
+      handleApiError(error, "Gagal upload file");
     } finally {
       setUploadLoading(false);
     }
