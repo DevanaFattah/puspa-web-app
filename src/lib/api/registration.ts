@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
+import axiosInstance from "@/lib/axios";
 
 
 export interface RegistrationPayload {
@@ -19,15 +20,9 @@ export interface RegistrationPayload {
 
 export async function registrationChild(payload: RegistrationPayload) {
   try {
-    const response = await axios.post(
-      "https://puspa-api.alfirdausina.com/api/v1/registration", 
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: false, 
-      }
+    const response = await axiosInstance.post(
+      "/registration", 
+      payload
     );
 
     return response.data;

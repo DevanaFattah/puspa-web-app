@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
-import { AxiosError } from "axios";
+import axiosInstance from "@/lib/axios";
 
 export async function registerUser({
   email,
@@ -12,8 +12,8 @@ export async function registerUser({
   password: string;
 }) {
   try {
-    const res = await axios.post(
-      "https://puspa-api.alfirdausina.com/api/v1/auth/register",
+    const res = await axiosInstance.post(
+      "/auth/register",
       { email, username, password }
     );
 

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
+import axiosInstance from "@/lib/axios";
 
 export interface ResetPasswordPayload {
   token: string;
@@ -20,10 +21,9 @@ export async function resetPassword({
   password_confirmation,
 }: ResetPasswordPayload): Promise<ResetPasswordResponse> {
   try {
-    const res = await axios.post(
-      `https://puspa-api.alfirdausina.com/api/v1/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`,
-      { password, password_confirmation },
-      { headers: { "Content-Type": "application/json" } }
+    const res = await axiosInstance.post(
+      `/auth/reset-password?token=${token}&email=${encodeURIComponent(email)}`,
+      { password, password_confirmation }
     );
 
     return {

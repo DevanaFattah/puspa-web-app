@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://puspa-api.alfirdausina.com/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "https://puspa-api.alfirdausina.com/api/v1";
 
 /**
  * ===========================================================

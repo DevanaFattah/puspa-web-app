@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import axios, { AxiosError } from "axios";
+import axios from "axios";
+import axiosInstance from "@/lib/axios";
 
 export interface ForgotPasswordPayload {
   email: string;
@@ -15,10 +16,9 @@ export async function forgotPassword(
   { email }: ForgotPasswordPayload
 ): Promise<ForgotPasswordResponse> {
   try {
-    const response = await axios.post(
-      "https://puspa-api.alfirdausina.com/api/v1/auth/forgot-password",
-      { email },
-      { headers: { "Content-Type": "application/json" } }
+    const response = await axiosInstance.post(
+      "/auth/forgot-password",
+      { email }
     );
 
     return {

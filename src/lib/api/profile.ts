@@ -6,7 +6,9 @@ function normalizeProfilePictureUrl(path?: string | null): string | null {
   if (!path) return null;
   const filename = path.split("/").pop();
   if (!filename) return null;
-  return `https://puspa-api.alfirdausina.com/storage/guardians/${filename}`;
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://puspa-api.alfirdausina.com/api/v1";
+  const storageBase = apiBase.replace(/\/api\/v1\/?$/, "");
+  return `${storageBase}/storage/guardians/${filename}`;
 }
 
 // ===================== INTERFACE (TYPE) =====================
