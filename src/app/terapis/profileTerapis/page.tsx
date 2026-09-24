@@ -3,9 +3,20 @@
 
 import React, { useState, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
-import { User } from "lucide-react";
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
+import { 
+  User, 
+  Phone, 
+  Mail, 
+  Calendar, 
+  Shield, 
+  Briefcase, 
+  Camera, 
+  Edit3, 
+  Save, 
+  X,
+  CheckCircle2,
+  AlertCircle
+} from "lucide-react";
 import { updateProfileWithPhoto } from "@/lib/api/ProfileTerapis";
 import { useTherapistProfile } from "@/context/ProfileTerapisContext";
 
@@ -117,151 +128,232 @@ export default function ProfilePage() {
   // =====================================
   if (loading) {
     return (
-      <p className="text-[#36315B] flex justify-center items-center min-h-screen">
-        Loading...
-      </p>
+      <div className="flex min-h-[60vh] items-center justify-center text-[#1E5C58]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#81B7A9] border-t-transparent"></div>
+          <span className="text-sm font-semibold">Memuat Profil...</span>
+        </div>
+      </div>
     );
   }
 
-  // =====================================
-  // UI
-  // =====================================
   return (
-    <div className="flex min-h-screen bg-gray-100 text-[#36315B]">
-      <SidebarTerapis />
+    <div className="p-6 md:p-8 space-y-6 text-[#1E5C58] bg-[#F8FBFB] min-h-screen flex justify-center items-start">
+      <div className="w-full max-w-4xl bg-white rounded-3xl border border-teal-50/60 shadow-[0_4px_24px_rgba(30,92,88,0.02)] overflow-hidden">
+        {/* Cover Accent Banner */}
+        <div className="h-32 bg-gradient-to-r from-[#1E5C58]/10 via-[#2B7A75]/15 to-[#81B7A9]/10 relative border-b border-teal-50" />
 
-      <div className="flex-1">
-        <HeaderTerapis />
+        <div className="p-6 md:p-8 -mt-16 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* COLUMN 1: PHOTO & PROFILE OVERVIEW */}
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="relative group w-36 h-36 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gray-100/80 transition-all duration-300">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Foto Profil"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-16 h-16 text-gray-400" />
+                )}
+                
+                {isEditing && (
+                  <>
+                    <input
+                      type="file"
+                      id="profileFileInput"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                    <label
+                      htmlFor="profileFileInput"
+                      className="absolute inset-0 bg-black/45 backdrop-blur-xs flex flex-col items-center justify-center text-white cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    >
+                      <Camera size={24} className="mb-1" />
+                      <span className="text-[10px] font-bold">Ubah Foto</span>
+                    </label>
+                  </>
+                )}
+              </div>
 
-        <main className="p-10 flex flex-col items-center">
-          {!isEditing ? (
-            /* ================= VIEW MODE ================= */
-            <div className="bg-white rounded-xl shadow-lg p-6 max-w-5xl w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* FOTO */}
-                <div className="flex flex-col items-center text-center p-6 shadow rounded-xl bg-white">
-                  <div className="w-44 h-44 rounded-full overflow-hidden border border-gray-300 flex items-center justify-center bg-gray-100">
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Foto Profil"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User className="w-20 h-20 text-gray-400" />
-                    )}
-                  </div>
-
-                  <h2 className="text-xl font-semibold text-[#4A8B73] mt-4">
-                    {profile?.therapist_name}
-                  </h2>
-                  <p className="text-gray-500 text-sm">Terapis</p>
-                </div>
-
-                {/* DETAIL */}
-                <div className="shadow rounded-xl p-6 bg-white relative">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="absolute right-6 top-4 text-white bg-[#8EC3AA] px-4 py-1 rounded-full text-sm"
-                  >
-                    Edit
-                  </button>
-
-                  <div className="grid grid-cols-2 gap-y-3 text-sm mt-6">
-                    <p className="font-semibold">Nama</p>
-                    <p>{profile?.therapist_name}</p>
-
-                    <p className="font-semibold">Tanggal Lahir</p>
-                    <p>{profile?.therapist_birth_date}</p>
-
-                    <p className="font-semibold">Telepon</p>
-                    <p>{profile?.therapist_phone}</p>
-
-                    <p className="font-semibold">Email</p>
-                    <p>{profile?.email}</p>
-
-                    <p className="font-semibold">Role</p>
-                    <p>{profile?.role}</p>
-
-                    <p className="font-semibold">Bidang Terapis</p>
-                    <p className="capitalize">{profile?.therapist_section}</p>
-                  </div>
+              <div>
+                <h2 className="text-lg font-extrabold text-[#1E5C58] tracking-tight">
+                  {profile?.therapist_name}
+                </h2>
+                <div className="mt-1.5 flex items-center justify-center gap-1.5">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF4F2] text-[#2B7A75]">
+                    {profile?.role === "asesor" ? "Asesor" : "Terapis"}
+                  </span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-[#1E5C58] capitalize">
+                    {profile?.therapist_section}
+                  </span>
                 </div>
               </div>
             </div>
-          ) : (
-            /* ================= EDIT MODE ================= */
-            <div className="w-full max-w-4xl">
-              <h2 className="text-3xl font-bold mb-8 text-center">
-                Informasi Pribadi
-              </h2>
 
-              <div className="bg-white border border-green-200 rounded-lg p-10 flex gap-12">
-                {/* FOTO */}
-                <div className="flex flex-col items-center flex-shrink-0">
-                  <div className="w-32 h-32 relative rounded-full overflow-hidden border border-green-200 flex items-center justify-center bg-gray-100">
-                    {previewUrl ? (
-                      <Image
-                        src={previewUrl}
-                        alt="Foto Profil"
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <User className="w-12 h-12 text-gray-400" />
-                    )}
-                  </div>
-
-                  <input
-                    type="file"
-                    id="fileInput"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <label
-                    htmlFor="fileInput"
-                    className="mt-4 px-4 py-2 border border-green-200 rounded text-green-600 hover:bg-green-50 cursor-pointer"
-                  >
-                    Pilih Foto
-                  </label>
+            {/* COLUMN 2 & 3: DETAILS / FORM EDIT */}
+            <div className="lg:col-span-2 space-y-6">
+              
+              {/* Alert Feedback Messages */}
+              {updateSuccess && (
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs font-bold animate-fadeIn">
+                  <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                  <span>Profil berhasil diperbarui!</span>
                 </div>
+              )}
 
-                {/* FORM */}
-                <div className="flex-1 flex flex-col">
-                  <div className="grid grid-cols-2 gap-6 mb-8">
-                    <input
-                      name="therapist_name"
-                      value={form.therapist_name}
-                      onChange={handleChange}
-                      className="p-3 border rounded"
-                      placeholder="Nama"
-                    />
-                    <input
-                      type="date"
-                      name="therapist_birth_date"
-                      value={form.therapist_birth_date}
-                      onChange={handleChange}
-                      className="p-3 border rounded"
-                    />
-                    <input
-                      name="therapist_phone"
-                      value={form.therapist_phone}
-                      onChange={handleChange}
-                      className="p-3 border rounded"
-                      placeholder="Telepon"
-                    />
-                    <input
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      className="p-3 border rounded"
-                      placeholder="Email"
-                    />
+              {updateError && (
+                <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3 text-rose-800 text-xs font-bold animate-fadeIn">
+                  <AlertCircle size={16} className="text-rose-500 shrink-0" />
+                  <span>{updateError}</span>
+                </div>
+              )}
+
+              {!isEditing ? (
+                /* ================= VIEW MODE ================= */
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-extrabold tracking-wider uppercase text-gray-400">
+                      Detail Profil
+                    </h3>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="cursor-pointer inline-flex items-center gap-2 bg-[#EAF4F2] hover:bg-[#D5EAE6] text-[#1E5C58] font-bold px-4 py-2 rounded-xl text-xs transition-all duration-300"
+                    >
+                      <Edit3 size={14} />
+                      <span>Ubah Profil</span>
+                    </button>
                   </div>
 
-                  <div className="mt-auto flex justify-end gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Item 1 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <User size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nama Lengkap</p>
+                        <p className="text-sm font-bold mt-0.5">{profile?.therapist_name || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* Item 2 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <Calendar size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tanggal Lahir</p>
+                        <p className="text-sm font-bold mt-0.5">{profile?.therapist_birth_date || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* Item 3 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <Phone size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nomor Telepon</p>
+                        <p className="text-sm font-bold mt-0.5">{profile?.therapist_phone || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* Item 4 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <Mail size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Email</p>
+                        <p className="text-sm font-bold mt-0.5 truncate max-w-[200px]">{profile?.email || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* Item 5 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <Shield size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Role</p>
+                        <p className="text-sm font-bold mt-0.5 capitalize">{profile?.role || "-"}</p>
+                      </div>
+                    </div>
+
+                    {/* Item 6 */}
+                    <div className="p-4 rounded-2xl border border-teal-50/50 bg-[#F8FBFB]/50 flex items-start gap-3">
+                      <div className="p-2 rounded-xl bg-white border border-teal-50 text-[#81B7A9]">
+                        <Briefcase size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bidang Layanan</p>
+                        <p className="text-sm font-bold mt-0.5 capitalize">{profile?.therapist_section || "-"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* ================= EDIT MODE ================= */
+                <div className="space-y-6">
+                  <h3 className="text-sm font-extrabold tracking-wider uppercase text-gray-400">
+                    Edit Informasi Pribadi
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Nama */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-500">Nama Lengkap</label>
+                      <input
+                        name="therapist_name"
+                        value={form.therapist_name}
+                        onChange={handleChange}
+                        className="w-full p-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                        placeholder="Nama"
+                      />
+                    </div>
+
+                    {/* Tanggal Lahir */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-500">Tanggal Lahir</label>
+                      <input
+                        type="date"
+                        name="therapist_birth_date"
+                        value={form.therapist_birth_date}
+                        onChange={handleChange}
+                        className="w-full p-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                      />
+                    </div>
+
+                    {/* Telepon */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-500">Nomor Telepon</label>
+                      <input
+                        name="therapist_phone"
+                        value={form.therapist_phone}
+                        onChange={handleChange}
+                        className="w-full p-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                        placeholder="Telepon"
+                      />
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-500">Email</label>
+                      <input
+                        name="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="w-full p-3 text-sm font-bold border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2B7A75]/10 focus:border-[#2B7A75] bg-gray-50/50 transition-all duration-300"
+                        placeholder="Email"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <button
                       onClick={() => {
                         setIsEditing(false);
@@ -271,10 +363,12 @@ export default function ProfilePage() {
                             ? `${profile.profile_picture}?t=${Date.now()}`
                             : null
                         );
+                        setUpdateError(null);
                       }}
-                      className="px-6 py-3 bg-gray-300 rounded"
+                      className="cursor-pointer px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition-all duration-300 flex items-center gap-1.5"
                     >
-                      Batal
+                      <X size={14} />
+                      <span>Batal</span>
                     </button>
 
                     <button
@@ -283,23 +377,27 @@ export default function ProfilePage() {
                         await handleSubmit();
                         setIsEditing(false);
                       }}
-                      className="px-6 py-3 bg-green-500 text-white rounded"
+                      className="cursor-pointer px-5 py-2.5 rounded-xl bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-bold text-xs transition-all duration-300 flex items-center gap-1.5 shadow-sm disabled:opacity-50"
                     >
-                      {updating ? "Memperbarui..." : "Perbarui"}
+                      {updating ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Memperbarui...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save size={14} />
+                          <span>Simpan Perubahan</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
-              </div>
-
-              {updateError && <p className="mt-4 text-red-600">{updateError}</p>}
-              {updateSuccess && (
-                <p className="mt-4 text-green-600">
-                  Profil berhasil diperbarui!
-                </p>
               )}
+
             </div>
-          )}
-        </main>
+          </div>
+        </div>
       </div>
     </div>
   );

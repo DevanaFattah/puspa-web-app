@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 
 // Menggunakan Layout Responsif dengan Sidebar Sticky
 import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
@@ -181,39 +181,44 @@ export default function FormAssessmentOrangtua() {
   };
 
   return (
-    <ResponsiveOrangtuaLayout maxWidth="max-w-5xl">
-      {/* Close Button */}
-      <div className="flex justify-end mb-4">
+    <ResponsiveOrangtuaLayout maxWidth="max-w-none">
+      {/* Header section with back & close actions */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 text-[#1E5C58]">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">I. Data Umum</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Lengkapi identitas dan riwayat tumbuh kembang anak Anda.</p>
+        </div>
         <button
           onClick={() =>
             router.push(
               `/orangtua/assessment/kategori?assessment_id=${assessmentIdFromQuery}`
             )
           }
-          className="text-[#36315B] hover:text-red-500 font-bold text-xl md:text-2xl p-1"
+          className="flex items-center justify-center p-2.5 bg-white border border-teal-50 rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm transition-colors cursor-pointer"
+          aria-label="Tutup"
         >
-          ✕
+          <X size={20} />
         </button>
       </div>
 
       {/* Step Navigator */}
-      <div className="w-full mb-8">
+      <div className="w-full mb-6">
         <StepNavigator steps={ASSESSMENT_STEPS} activeStep={activeStep} />
       </div>
 
       {/* Content Section */}
-      <section className="bg-white rounded-xl md:rounded-2xl shadow-sm border p-4 md:p-8 w-full">
+      <section className="bg-white rounded-3xl border border-teal-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-5 md:p-8 w-full">
         {/* Title + Dropdown Kategori */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <h2 className="text-base md:text-lg font-bold text-[#36315B]">
-            I. Data Umum
+          <h2 className="text-base md:text-lg font-extrabold text-[#1E5C58]">
+            {activeCategory === "identitas" ? "Identitas Orang Tua & Anak" : groups.find((g) => g.group_key === activeCategory)?.title || "Formulir"}
           </h2>
 
           <div className="relative inline-block w-full sm:w-64">
             <select
               value={activeCategory}
               onChange={(e) => setActiveCategory(e.target.value)}
-              className="appearance-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-xs md:text-sm text-[#36315B] w-full bg-white cursor-pointer"
+              className="appearance-none border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-xs md:text-sm text-[#1E5C58] font-bold w-full bg-white cursor-pointer focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent outline-none transition-all"
             >
               {groups.map((g) => (
                 <option key={g.group_key} value={g.group_key}>
@@ -221,7 +226,7 @@ export default function FormAssessmentOrangtua() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-450 pointer-events-none" />
           </div>
         </div>
 
@@ -241,27 +246,29 @@ export default function FormAssessmentOrangtua() {
 
         {/* DYNAMIC QUESTIONS */}
         {activeCategory !== "identitas" && (
-          <div className="space-y-6 md:space-y-8">
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6BB1A0]"></div>
-              </div>
-            ) : currentQuestions.length === 0 ? (
-              <p className="text-sm md:text-base text-gray-500 text-center py-10">
-                Tidak ada pertanyaan di kategori ini.
-              </p>
-            ) : (
-              currentQuestions.map((q: any) => (
-                <QuestionRenderer
-                  key={q.id}
-                  question={q}
-                  answer={answers[q.id]}
-                  onAnswerChange={setAnswer}
-                  onToggleCheckbox={toggleCheckboxValue}
-                  onTableCellChange={handleTableCell}
-                />
-              ))
-            )}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {loading ? (
+                <div className="col-span-full flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2B7A75]"></div>
+                </div>
+              ) : currentQuestions.length === 0 ? (
+                <p className="col-span-full text-sm md:text-base text-gray-500 text-center py-12">
+                  Tidak ada pertanyaan di kategori ini.
+                </p>
+              ) : (
+                currentQuestions.map((q: any) => (
+                  <QuestionRenderer
+                    key={q.id}
+                    question={q}
+                    answer={answers[q.id]}
+                    onAnswerChange={setAnswer}
+                    onToggleCheckbox={toggleCheckboxValue}
+                    onTableCellChange={handleTableCell}
+                  />
+                ))
+              )}
+            </div>
 
             {/* Navigation Buttons */}
             <NavigationButtons

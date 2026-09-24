@@ -51,13 +51,14 @@ export const getParentProfile = async (token?: string): Promise<ProfileResponse 
     return res.data;
   } catch (error: any) {
     if (error.response) {
-      // Error dari server
-      console.error("Error fetching profile:", error.response.data);
+      if (error.response.status === 401) {
+        console.warn("[Profile API] Unauthorized: token expired or invalid.");
+      } else {
+        console.error("Error fetching profile:", error.response.data || error.response.statusText || error.message);
+      }
     } else if (error.request) {
-      // Request dibuat tapi tidak ada response
       console.error("No response received:", error.request);
     } else {
-      // Error lain
       console.error("Error setting up request:", error.message);
     }
     return null;

@@ -43,7 +43,7 @@ export async function getDashboardStats(): Promise<DashboardStats | null> {
 
     const res = await api.get("/admins/dashboard/stats", {
       headers: {
-        Authorization: 'Bearer ${token}',
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -65,7 +65,7 @@ export async function getTodaySchedule(): Promise<TodaySchedule[]> {
 
     const res = await api.get("/admins/dashboard/today-schedule", {
       headers: {
-        Authorization: 'Bearer ${token}',
+        Authorization: `Bearer ${token}`,
       },
     });
 

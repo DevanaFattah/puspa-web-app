@@ -30,5 +30,19 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Interceptor untuk menangani error respons secara global (misal: 401 Unauthorized)
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        console.warn("[Axios] Sesi berakhir (401), membersihkan localStorage...");
+        localStorage.clear();
+        window.location.href = "/auth/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default axiosInstance;

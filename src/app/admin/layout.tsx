@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import { AdminProfileProvider } from "@/context/ProfileAdminContext";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -10,6 +10,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+
   return (
     <AdminProfileProvider>
       <Suspense
@@ -19,23 +21,22 @@ export default function AdminLayout({
           </div>
         }
       >
-        <div className="flex h-screen">
+        <div className="flex h-screen bg-[#F4F9F8] overflow-hidden">
           {/* SIDEBAR */}
-          <aside className="sticky top-0 h-screen">
-            <Sidebar />
-          </aside>
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
 
           {/* MAIN AREA */}
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 relative overflow-hidden">
             {/* HEADER */}
-            <header className="sticky top-0 z-30 bg-white shadow px-6">
-              <Header />
+            <header className="sticky top-0 z-30">
+              <Header onOpenSidebar={() => setIsSidebarOpen(true)} />
             </header>
 
             {/* CONTENT */}
-            <main className="flex-1 overflow-y-auto bg-gray-50 p-4">
-              {children}
-            </main>
+            <main className="flex-1 overflow-y-auto">{children}</main>
           </div>
         </div>
       </Suspense>

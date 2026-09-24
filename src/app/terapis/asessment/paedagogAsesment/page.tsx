@@ -4,12 +4,10 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-
-import SidebarTerapis from "@/components/layout/sidebar_terapis";
-import HeaderTerapis from "@/components/layout/header_terapis";
+import { ChevronDown, Check } from "lucide-react";
 
 import { submitAssessment, getAssessmentQuestions } from "@/lib/api/asesment";
+import { handleApiError, showSuccessToast } from "@/lib/api-error";
 
 // ==========================================================
 // API INTERFACES
@@ -81,7 +79,6 @@ const mapAnswersToPayloadBE = (
       };
 
       if (q.answer_type === "text") {
-        // Untuk pertanyaan text (kesimpulan) simpan desc saja
         payloadItem.answer = { value: val.desc || "" };
       } else if (val.score !== undefined) {
         payloadItem.answer = { value: val.score };
@@ -140,8 +137,8 @@ export default function PLBAssessmentPage() {
 
         setAllQuestions(mapped);
         if (mapped.length > 0) setActiveAspek(mapped[0].key);
-      } catch {
-        alert("❌ Gagal memuat pertanyaan dari server.");
+      } catch (err) {
+        handleApiError(err, "Gagal memuat pertanyaan dari server. ❌");
         setAllQuestions([]);
       } finally {
         setLoadingQuestions(false);
@@ -149,6 +146,13 @@ export default function PLBAssessmentPage() {
     };
 
     fetchQuestions();
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleOutsideClick = () => setOpenDropdown(null);
+    window.addEventListener("click", handleOutsideClick);
+    return () => window.removeEventListener("click", handleOutsideClick);
   }, []);
 
   const aspekTabs = useMemo(() => allQuestions.map((a) => a.key), [allQuestions]);
@@ -210,26 +214,27 @@ export default function PLBAssessmentPage() {
     setOpenDropdown(null);
   };
 
-   const handleSubmit = async () => {
-    if (!assessmentId) return alert("❌ assessment_id tidak ditemukan");
+  const handleSubmit = async () => {
+    if (!assessmentId) {
+      handleApiError(null, "assessment_id tidak ditemukan ❌");
+      return;
+    }
 
     const allComplete = Object.values(validationStatus).every(
       (v) => v === "completed"
     );
-    if (!allComplete)
-      return alert("❌ Lengkapi semua penilaian sebelum menyimpan!");
+    if (!allComplete) {
+      handleApiError(null, "Lengkapi semua penilaian sebelum menyimpan! ❌");
+      return;
+    }
 
     const payload = mapAnswersToPayloadBE(answers, allQuestions);
-
-    console.log("📦 Payload submit assessment:", payload);
-    console.log("🆔 assessment_id:", assessmentId);
-    console.log("📌 type:", type);
 
     try {
       setLoading(true);
       await submitAssessment(assessmentId, type, payload);
 
-      alert("✅ Penilaian berhasil disimpan!");
+      showSuccessToast("Penilaian berhasil disimpan! ✅");
       router.push(`/terapis/asessment?type=paedagog&status=completed`);
     } catch (err: any) {
       console.error("❌ Submit assessment error:", err);
@@ -240,193 +245,202 @@ export default function PLBAssessmentPage() {
         err?.message ||
         "Terjadi kesalahan";
 
-      // 👉 Khusus tidak punya izin
       if (status === 403) {
-        alert(
-          "❌ Anda tidak memiliki izin untuk menyimpan penilaian ini.\n\n" +
-            "Pastikan:\n" +
-            "- Anda login sebagai Asesor sesuai jenis terapi\n" +
-            "- Assessment ini memang milik Anda"
-        );
+        handleApiError(err, "Anda tidak memiliki izin untuk menyimpan penilaian ini. Pastikan Anda login sebagai Asesor sesuai jenis terapi dan assessment ini memang milik Anda.");
         return;
       }
 
-      // 👉 Unauthorized / token habis
       if (status === 401) {
-        alert("⚠️ Sesi Anda telah berakhir. Silakan login kembali.");
-        router.push("/login");
+        handleApiError(err, "Sesi Anda telah berakhir. Silakan login kembali.");
+        router.push("/auth/login");
         return;
       }
 
-      // 👉 Error lainnya
-      alert("❌ Gagal menyimpan: " + message);
+      handleApiError(err, "Gagal menyimpan: " + message);
     } finally {
       setLoading(false);
     }
   };
 
-
   if (loadingQuestions) {
-    return <div className="flex h-screen justify-center items-center text-lg">Memuat pertanyaan...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-gray-400">
+        <div className="w-8 h-8 border-4 border-[#81B7A9] border-t-transparent rounded-full animate-spin mb-3"></div>
+        <span className="text-sm font-medium">Memuat pertanyaan kuesioner...</span>
+      </div>
+    );
   }
+  
   if (!allQuestions.length) {
-    return <div className="flex h-screen justify-center items-center text-lg">❌ Tidak ada pertanyaan tersedia.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-red-500 font-bold">
+        ❌ Tidak ada pertanyaan tersedia.
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen text-[#36315B] font-playpen">
-      <SidebarTerapis />
-      <div className="flex flex-col flex-1 bg-gray-50">
-        <HeaderTerapis />
-        <main className="p-6 overflow-y-auto">
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => (window.location.href = "/terapis/asessment")}
-              className="text-[#36315B] hover:text-red-500 font-bold text-2xl"
-            >
-              ✕
-            </button>
-          </div>
-
-          <h1 className="text-2xl font-bold text-center mb-4">
-            PLB | Paedagog {activeAspectObj?.title ?? ""}
+    <div className="p-6 md:p-8 space-y-8 text-[#1E5C58] bg-[#F8FBFB] min-h-screen">
+      {/* ================= HEADER ================= */}
+      <div className="flex justify-between items-center border-b border-teal-100/50 pb-5">
+        <div>
+          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-[#1E5C58]">
+            Form Asesmen PLB / Paedagog
           </h1>
+          <p className="text-xs md:text-sm text-gray-400 mt-1">
+            Lengkapi penilaian aspek tumbuh kembang anak secara berkala.
+          </p>
+        </div>
+        <button
+          onClick={() => (window.location.href = "/terapis/asessment")}
+          className="cursor-pointer inline-flex items-center gap-2 bg-[#1E5C58] hover:bg-[#2E8B83] text-white font-semibold px-4 py-2.5 rounded-xl text-sm transition-all duration-300 shadow-[0_4px_12px_rgba(129,183,169,0.2)] hover:shadow-[0_8px_20px_rgba(30,92,88,0.2)] hover:-translate-y-0.5"
+        >
+          <span>Kembali</span>
+        </button>
+      </div>
 
-          {/* TABS */}
-          <div className="flex flex-wrap gap-3 justify-center mb-6">
-            {aspekTabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveAspek(tab)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
-                  activeAspek === tab
-                    ? "bg-[#81B7A9]/20 border-[#81B7A9]"
-                    : validationStatus[tab] === "completed"
-                    ? "bg-[#36315B] text-white border-[#36315B]"
-                    : "text-[#36315B]/70 hover:bg-gray-100 border-gray-300"
-                }`}
-              >
-                {allQuestions.find((x) => x.key === tab)?.title}
-              </button>
-            ))}
-          </div>
+      {/* ================= STEPPER PROGRESS TABS ================= */}
+      <div className="flex flex-wrap gap-2 p-1.5 bg-[#EAF4F2]/50 border border-teal-50/50 rounded-2xl w-fit">
+        {aspekTabs.map((tab, idx) => {
+          const isActive = activeAspek === tab;
+          const isDone = validationStatus[tab] === "completed";
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveAspek(tab)}
+              className={`cursor-pointer px-4 py-2.5 text-xs md:text-sm font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                isActive
+                  ? "bg-[#1E5C58] text-white shadow-sm"
+                  : isDone
+                  ? "bg-[#81B7A9] text-white"
+                  : "text-[#1E5C58]/80 hover:bg-white/60 hover:text-[#1E5C58]"
+              }`}
+            >
+              {isDone && <Check className="w-3.5 h-3.5" />}
+              <span>{idx + 1}. {allQuestions.find((x) => x.key === tab)?.title}</span>
+            </button>
+          );
+        })}
+      </div>
 
-          {/* QUESTION LIST */}
-          <div className="bg-white rounded-xl p-5 shadow">
-            {currentQuestions.map((q, i) => {
-              const current = answers[activeAspek]?.[i];
+      {/* ================= QUESTION CARDS ================= */}
+      <div className="bg-white rounded-xl p-4 md:p-6 border border-teal-100 shadow-[0_4px_20px_rgba(30,92,88,0.02)] space-y-4">
+        <h2 className="text-base font-extrabold text-[#1E5C58] border-b border-gray-100 pb-2.5">
+          Aspek: {activeAspectObj?.title}
+        </h2>
 
-              // Jika pertanyaan tipe text (kesimpulan), render input biasa tanpa dropdown
-              if (q.answer_type === "text") {
-                return (
-                  <div key={i} className="mb-6 p-4 rounded-lg shadow-md">
-                    <p className="font-semibold mb-3">
-                      {i + 1}. {q.label}
-                    </p>
-                    <input
-                      className="w-full border rounded-md p-2"
-                      placeholder="Tulis kesimpulan..."
-                      value={current?.desc || ""}
-                      onChange={(e) => handleDescChange(i, e.target.value)}
-                    />
-                  </div>
-                );
-              }
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {currentQuestions.map((q, i) => {
+            const current = answers[activeAspek]?.[i];
 
-              // Untuk pertanyaan biasa dengan score
+            if (q.answer_type === "text") {
               return (
-                <div key={i} className="mb-6 p-4 rounded-lg shadow-md">
-                  <p className="font-semibold mb-3">
+                <div
+                  key={i}
+                  className="p-3 bg-teal-50/20 rounded-xl border border-teal-100/60 flex flex-col gap-2"
+                >
+                  <p className="font-bold text-gray-700 text-xs sm:text-sm leading-relaxed">
                     {i + 1}. {q.label}
                   </p>
-                  <div className="flex items-center gap-4">
-                    <input
-                      className="flex-1 border rounded-md p-2"
-                      placeholder="Keterangan..."
-                      value={current?.desc || ""}
-                      onChange={(e) => handleDescChange(i, e.target.value)}
-                    />
-                    <div className="relative w-36">
-                      <button
-                        onClick={() => setOpenDropdown(openDropdown === i ? null : i)}
-                        className="flex justify-between items-center w-full px-3 py-2 border rounded-md bg-gray-50"
-                      >
-                        {current?.score ?? "Penilaian"}
-                        <ChevronDown
-                          className={`ml-2 ${openDropdown === i ? "rotate-180" : ""}`}
-                          size={16}
-                        />
-                      </button>
-                      <AnimatePresence>
-                        {openDropdown === i && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            className="absolute mt-1 w-full bg-white border rounded-md shadow-md z-50"
+                  <input
+                    className="w-full border border-teal-100/70 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#81B7A9] transition-all bg-white"
+                    placeholder="Tulis kesimpulan..."
+                    value={current?.desc || ""}
+                    onChange={(e) => handleDescChange(i, e.target.value)}
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={i}
+                className="p-3 bg-teal-50/20 rounded-xl border border-teal-100/60 flex flex-col gap-2 text-xs sm:text-sm"
+              >
+                <p className="font-bold text-gray-700 leading-relaxed">
+                  {i + 1}. {q.label}
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    className="flex-1 min-w-0 border border-teal-100/70 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#81B7A9] transition-all bg-white"
+                    placeholder="Catatan..."
+                    value={current?.desc || ""}
+                    onChange={(e) => handleDescChange(i, e.target.value)}
+                  />
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden sm:inline">Skor:</span>
+                    <div className="flex gap-0.5 p-0.5 bg-white border border-teal-100/80 rounded-lg">
+                      {q.options.map((opt) => {
+                        const isSelected = current?.score === opt;
+                        return (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleScoreSelect(i, opt)}
+                            className={`cursor-pointer px-2.5 py-1 rounded-md text-xs font-bold transition-all duration-200 ${
+                              isSelected
+                                ? "bg-[#1E5C58] text-white shadow-sm"
+                                : "bg-transparent text-gray-500 hover:bg-teal-50/30"
+                            }`}
                           >
-                            {q.options.map((opt) => (
-                              <button
-                                key={opt}
-                                onClick={() => handleScoreSelect(i, opt)}
-                                className="block w-full text-left px-4 py-2 hover:bg-[#81B7A9]/20"
-                              >
-                                {opt}
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            {opt}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-              );
-            })}
-
-            {isLast && (
-              <div className="mt-10 mb-6 bg-[#F8F8F8] p-4 rounded-lg text-sm leading-relaxed">
-                <p className="font-semibold mb-2">Keterangan Penilaian:</p>
-                <p>Nilai 0 : Buruk / Anak belum menguasai aspek</p>
-                <p>Nilai 1 : Kurang baik / Anak menguasai aspek namun tidak konsisten dan butuh bantuan dalam mengerjakannya</p>
-                <p>Nilai 2 : Cukup baik / Anak menguasai aspek secara konsisten dengan sedikit bantuan</p>
-                <p>Nilai 3 : Baik / Anak menguasai aspek</p>
               </div>
-            )}
-          </div>
+            );
+          })}
+        </div>
 
-          {/* NAVIGATION BUTTONS */}
-          <div className="flex justify-between mt-6">
-            <button
-              disabled={isFirst}
-              onClick={() => setActiveAspek(aspekTabs[aspekTabs.indexOf(activeAspek) - 1])}
-              className="px-6 py-2 rounded-lg border border-[#81B7A9] text-[#81B7A9] disabled:opacity-50"
-            >
-              ← Sebelumnya
-            </button>
-            {isLast ? (
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className={`px-6 py-2 rounded-lg text-white ${loading ? "bg-gray-400" : "bg-[#36315B]"}`}
-              >
-                {loading ? "Menyimpan..." : "Simpan & Selesai"}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  if (!validateCurrentAspek()) {
-                    alert("❌ Masih ada pertanyaan yang belum dinilai!");
-                    return;
-                  }
-                  setActiveAspek(aspekTabs[aspekTabs.indexOf(activeAspek) + 1]);
-                }}
-                className="px-6 py-2 rounded-lg text-white bg-[#81B7A9]"
-              >
-                Lanjutkan →
-              </button>
-            )}
+        {/* ================= LEGEND / METADATA ================= */}
+        {isLast && (
+          <div className="bg-teal-50/60 border border-teal-100 rounded-xl p-4 space-y-2">
+            <span className="block text-xs font-bold text-teal-800 uppercase tracking-wider">Keterangan Penilaian:</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] font-semibold text-[#1E5C58]/80 leading-relaxed">
+              <p><span className="text-[#1E5C58] font-bold">Nilai 0 :</span> Buruk / Anak belum menguasai aspek</p>
+              <p><span className="text-[#1E5C58] font-bold">Nilai 1 :</span> Kurang baik / Anak menguasai aspek namun tidak konsisten dan butuh bantuan dalam mengerjakannya</p>
+              <p><span className="text-[#1E5C58] font-bold">Nilai 2 :</span> Cukup baik / Anak menguasai aspek secara konsisten dengan sedikit bantuan</p>
+              <p><span className="text-[#1E5C58] font-bold">Nilai 3 :</span> Baik / Anak menguasai aspek</p>
+            </div>
           </div>
-        </main>
+        )}
+
+        {/* ================= ACTION NAVIGATION ================= */}
+        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+          <button
+            disabled={isFirst}
+            onClick={() => setActiveAspek(aspekTabs[aspekTabs.indexOf(activeAspek) - 1])}
+            className="cursor-pointer inline-flex items-center gap-1.5 bg-white text-[#1E5C58] px-4 py-2 rounded-xl border border-teal-100 hover:bg-teal-50/30 transition-all text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span>← Sebelumnya</span>
+          </button>
+          
+          {isLast ? (
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="cursor-pointer inline-flex items-center gap-1.5 bg-[#1E5C58] hover:bg-[#2E8B83] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              <span>{loading ? "Menyimpan..." : "Simpan & Selesai"}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (!validateCurrentAspek()) {
+                  handleApiError(null, "Masih ada pertanyaan yang belum dinilai! ❌");
+                  return;
+                }
+                setActiveAspek(aspekTabs[aspekTabs.indexOf(activeAspek) + 1]);
+              }}
+              className="cursor-pointer inline-flex items-center gap-1.5 bg-[#1E5C58] hover:bg-[#2E8B83] text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md hover:shadow-lg transition-all"
+            >
+              <span>Lanjutkan →</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

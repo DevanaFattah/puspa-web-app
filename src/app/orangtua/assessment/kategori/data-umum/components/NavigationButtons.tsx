@@ -20,12 +20,12 @@ export default function NavigationButtons({
     submitting,
 }: NavigationButtonsProps) {
     return (
-        <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 pt-6 border-t border-gray-50">
             {currentIndex > 0 ? (
                 <button
                     type="button"
                     onClick={onPrev}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-xl text-sm md:text-base order-2 sm:order-1"
+                    className="bg-gray-100 hover:bg-gray-200 text-[#1E5C58] px-6 py-3 rounded-2xl text-xs md:text-sm font-bold transition-all active:scale-95 cursor-pointer text-center order-2 sm:order-1"
                 >
                     Sebelumnya
                 </button>
@@ -37,7 +37,7 @@ export default function NavigationButtons({
                 <button
                     type="button"
                     onClick={onNext}
-                    className="bg-[#6BB1A0] hover:bg-[#5EA391] text-white px-6 md:px-8 py-2 rounded-xl text-sm md:text-base order-1 sm:order-2"
+                    className="bg-[#2B7A75] hover:bg-[#1E5C58] text-white px-6 md:px-8 py-3 rounded-2xl text-xs md:text-sm font-bold shadow-md shadow-teal-500/10 transition-all active:scale-95 cursor-pointer text-center order-1 sm:order-2"
                 >
                     Selanjutnya
                 </button>
@@ -46,9 +46,9 @@ export default function NavigationButtons({
                     type="button"
                     onClick={onSubmit}
                     disabled={submitting}
-                    className="bg-[#6BB1A0] hover:bg-[#5EA391] text-white px-6 md:px-8 py-2 rounded-xl disabled:opacity-60 text-sm md:text-base order-1 sm:order-2"
+                    className="bg-[#2B7A75] hover:bg-[#1E5C58] text-white px-6 md:px-8 py-3 rounded-2xl disabled:opacity-60 text-xs md:text-sm font-bold shadow-md shadow-teal-500/10 transition-all active:scale-95 cursor-pointer text-center order-1 sm:order-2"
                 >
-                    {submitting ? "Mengirim..." : "Simpan"}
+                    {submitting ? "Mengirim..." : "Kirim Jawaban"}
                 </button>
             )}
         </div>

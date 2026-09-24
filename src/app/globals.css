@@ -99,6 +99,253 @@ input[type="password"]::-ms-clear {
   display: none;
 }
 
-input[type="password"]::-webkit-textfield-decoration-container {
-  display: none;
+/* ================= COLLAPSIBLE SIDEBAR ================= */
+
+/* Set default dimensions in expanded state to allow smooth collapse transition */
+aside {
+  width: 256px;
+  min-width: 256px;
+  max-width: 256px;
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+aside a,
+aside button {
+  transition: 
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    gap 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Sidebar collapsed state: perkecil lebar */
+.sidebar-collapsed aside {
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  overflow: visible !important;
+}
+
+.sidebar-collapsed nav {
+  overflow: visible !important;
+}
+
+/* ── Logo ── */
+.sidebar-logo-wide {
+  opacity: 1;
+  max-width: 180px;
+  overflow: hidden;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.sidebar-logo-mini {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  display: flex !important; /* Force flex display to override Tailwind's hidden class */
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none;
+}
+
+.sidebar-collapsed .sidebar-logo-wide {
+  opacity: 0;
+  max-width: 0 !important;
+}
+
+.sidebar-collapsed .sidebar-logo-mini {
+  opacity: 1 !important;
+  max-width: 48px !important;
+  pointer-events: auto;
+}
+
+/* ── Teks, chevron, section title: fade + shrink ── */
+.sidebar-text,
+.sidebar-chevron,
+.sidebar-section-title {
+  opacity: 1;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.sidebar-collapsed .sidebar-text,
+.sidebar-collapsed .sidebar-chevron,
+.sidebar-collapsed .sidebar-section-title {
+  opacity: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none;
+}
+
+/* Center icons saat sidebar collapsed */
+.sidebar-collapsed aside button,
+.sidebar-collapsed aside a {
+  width: 100% !important; /* Force full width (48px) inside nav to enable perfect flex-centering */
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  gap: 0 !important;
+}
+
+.sidebar-collapsed aside button > div {
+  gap: 0 !important;
+  justify-content: center !important;
+}
+
+/* Reset untuk submenu melayang dan popover profil agar tetap rapi, rata kiri, dan memiliki gap */
+.sidebar-collapsed aside .absolute a,
+.sidebar-collapsed aside .absolute button,
+.sidebar-collapsed-submenu a,
+.sidebar-collapsed-submenu button {
+  justify-content: flex-start !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+/* Center bottom profile container when collapsed */
+.sidebar-collapsed aside .border-t {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.sidebar-collapsed aside .border-t > div {
+  justify-content: center !important;
+  padding: 8px 0 !important;
+  gap: 0 !important;
+}
+
+/* Hover floating submenu */
+.sidebar-collapsed-submenu {
+  display: none !important;
+  pointer-events: none;
+}
+
+.sidebar-collapsed-submenu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -16px;
+  width: 16px;
+  background: transparent;
+}
+
+.sidebar-collapsed .group\/menu:hover .sidebar-collapsed-submenu {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+.sidebar-collapsed .sidebar-collapsed-submenu a,
+.sidebar-collapsed .sidebar-collapsed-submenu button {
+  justify-content: flex-start !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  gap: 10px !important;
+}
+
+/* Beautiful popover container */
+.sidebar-collapsed-submenu {
+  border: 1px solid rgba(43, 122, 117, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 16px -6px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 12px !important;
+  padding: 6px !important;
+  background-color: #ffffff !important;
+}
+
+.sidebar-collapsed-submenu > div:first-child {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #2b7a75 !important;
+  opacity: 0.7 !important;
+  padding: 6px 12px 8px 12px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04) !important;
+  margin-bottom: 6px !important;
+}
+
+/* Hide scrollbars globally on specified elements */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
+
+/* Custom modern Teal scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #81B7A9 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C0DCD6;
+  border-radius: 99px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1E5C58;
+}
+
+/* Custom Toast slide animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.toast-slide-in {
+  animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-slide-out {
+  animation: slideOutRight 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

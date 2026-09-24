@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { X, ChevronRight } from "lucide-react";
 import ResponsiveOrangtuaLayout from "@/components/layout/ResponsiveOrangtuaLayout";
 import {
   getParentAssessmentQuestions,
@@ -28,7 +29,7 @@ type Group = {
 
 type Step = { label: string; path: string };
 
-export default function PaedagogFormPage() {
+function PaedagogFormContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -113,8 +114,6 @@ export default function PaedagogFormPage() {
           .map(([questionId, answer]) => ({ question_id: Number(questionId), answer: { value: answer } }))
       );
 
-      console.log("PAYLOAD KE BE:", formattedAnswers);
-
       await submitParentAssessment(assessmentId, "paedagog_parent", { answers: formattedAnswers });
       alert("Jawaban berhasil disimpan");
       router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`);
@@ -124,98 +123,69 @@ export default function PaedagogFormPage() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (groups.length === 0) return <p>Tidak ada pertanyaan.</p>;
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Pertanyaan...</p>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) return <p className="text-center py-12 text-gray-500 font-semibold">Tidak ada pertanyaan.</p>;
 
   const group = groups[currentStep];
 
   return (
-    <ResponsiveOrangtuaLayout>
-      {/* Close Button */}
-      <div className="flex justify-end mb-4 md:mb-6">
+    <ResponsiveOrangtuaLayout maxWidth="max-w-none">
+      {/* Header section with back & close actions */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 text-[#1E5C58]">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">V. Data Paedagog</h1>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Analisis kesiapan belajar, fokus akademis, and kemandirian perilaku anak Anda.</p>
+        </div>
         <button
           onClick={() => router.push(`/orangtua/assessment/kategori?assessment_id=${assessmentId}`)}
-          className="text-[#36315B] hover:text-red-500 font-bold text-xl md:text-2xl p-1 md:p-0"
+          className="flex items-center justify-center p-2.5 bg-white border border-teal-50 rounded-2xl hover:bg-gray-50 text-gray-400 hover:text-gray-600 shadow-sm transition-colors cursor-pointer"
           aria-label="Tutup"
         >
-          ✕
+          <X size={20} />
         </button>
       </div>
 
       {/* Step Progress - Responsive */}
-      <div className="mb-6 md:mb-12 overflow-x-auto pb-2">
-        <div className="flex justify-center min-w-max md:min-w-0">
-          <div className="flex items-center">
-            {steps.map((step, i) => (
-              <div key={i} className="flex items-center">
-                <div className="flex flex-col items-center text-center space-y-1 md:space-y-2">
-                  <div
-                    className={`flex items-center justify-center rounded-full border-2 font-semibold 
-                      w-8 h-8 text-xs md:w-9 md:h-9 md:text-sm ${
-                        i === activeStep
-                          ? "bg-[#6BB1A0] border-[#6BB1A0] text-white"
-                          : "bg-gray-100 border-gray-300 text-gray-500"
-                      }`}
-                  >
-                    {i + 1}
-                  </div>
-                  <span
-                    className={`text-xs md:text-sm font-medium whitespace-nowrap px-1 ${
-                      i === activeStep ? "text-[#36315B]" : "text-gray-500"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
+      <div className="mb-6 md:mb-10 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+        <div className="flex items-center min-w-max md:min-w-0 md:justify-center px-4 md:px-0">
+          {steps.map((step, i) => (
+            <div key={i} className="flex items-center">
+              <div 
+                className="flex flex-col items-center text-center space-y-1.5 md:space-y-2 cursor-pointer group" 
+                onClick={() => router.push(`${step.path}?assessment_id=${assessmentId}`)}
+              >
+                <div
+                  className={`w-8 h-8 md:w-10 md:h-10 rounded-2xl flex items-center justify-center text-[10px] md:text-sm font-extrabold border-2 transition-all duration-300 ${
+                    i === activeStep
+                      ? "bg-[#2B7A75] border-[#2B7A75] text-white shadow-md shadow-teal-500/20"
+                      : i < activeStep
+                        ? "bg-teal-50/50 border-[#2B7A75]/30 text-[#2B7A75]"
+                        : "bg-gray-100 border-gray-200 text-gray-400"
+                  }`}
+                >
+                  {i + 1}
                 </div>
-                {i < steps.length - 1 && (
-                  <div className="w-6 md:w-12 h-px bg-gray-300 mx-1 md:mx-2 translate-y-[-10px] md:translate-y-[-12px]" />
-                )}
+                <span
+                  className={`text-[10px] md:text-xs font-bold transition-colors ${
+                    i === activeStep ? "text-[#1E5C58]" : "text-gray-400 group-hover:text-gray-600"
+                  } max-w-[70px] md:max-w-none leading-tight`}
+                >
+                  {step.label}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Card Pertanyaan - Responsive */}
-      <div className="bg-white rounded-lg md:rounded-xl p-4 md:p-6 shadow mb-4 md:mb-6">
-        <h2 className="font-semibold text-base md:text-lg mb-2 md:mb-3 text-[#36315B]">
-          {group.title}
-        </h2>
-
-        <div className="space-y-3 md:space-y-4">
-          {group.questions.map((q) => (
-            <div key={q.id} className="bg-gray-50 p-3 md:p-4 rounded-lg">
-              <label className="block mb-2 font-medium text-sm md:text-base">
-                <span className="text-[#36315B]">{q.question_number}.</span> {q.question_text}
-              </label>
-
-              {q.answer_type === "radio" ? (
-                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-2">
-                  {q.answer_options?.map((opt) => (
-                    <label
-                      key={opt}
-                      className="flex items-center gap-2 text-sm md:text-base cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name={`${group.group_key}-${q.id}`}
-                        checked={answers[group.group_key]?.[q.id] === opt}
-                        onChange={() => handleChange(group.group_key, q.id, opt)}
-                        className="accent-[#409E86] w-4 h-4 md:w-5 md:h-5"
-                      />
-                      <span className="text-gray-700">{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-3 rounded-lg 
-                    focus:outline-none focus:ring-2 focus:ring-[#409E86] focus:border-transparent
-                    text-sm md:text-base"
-                  value={answers[group.group_key]?.[q.id] ?? ""}
-                  onChange={(e) => handleChange(group.group_key, q.id, e.target.value)}
-                  placeholder="Ketik jawaban di sini"
+              {i < steps.length - 1 && (
+                <div
+                  className={`h-0.5 transition-all duration-300 mx-2 md:mx-4 translate-y-[-10px] md:translate-y-[-14px] rounded-full ${
+                    i < activeStep ? "bg-[#2B7A75] w-6 md:w-16" : "bg-gray-200 w-4 md:w-12"
+                  }`}
                 />
               )}
             </div>
@@ -223,60 +193,117 @@ export default function PaedagogFormPage() {
         </div>
       </div>
 
-      {/* Navigation Buttons - Responsive */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-3 md:gap-0 mt-6 md:mt-8">
-        <div className="w-full sm:w-auto">
+      {/* Card Pertanyaan - Responsive */}
+      <div className="bg-white rounded-3xl border border-teal-50 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] p-5 md:p-8 w-full">
+        {/* Card Sub-header */}
+        <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex items-center justify-between">
+          <div>
+            <h4 className="text-base md:text-lg font-extrabold text-[#1E5C58]">
+              {group.title}
+            </h4>
+            <p className="text-[10px] md:text-xs text-gray-400 font-semibold mt-0.5">Aspek {currentStep + 1} dari {groups.length}</p>
+          </div>
+          
+          <div className="flex gap-1">
+            {groups.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  idx === currentStep ? "w-6 bg-[#2B7A75]" : "w-2 bg-gray-200"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Questions Render - Grid 2 Column */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {group.questions.map((q) => {
+            const isFullWidth = q.answer_type === "text";
+            return (
+              <div key={q.id} className={`p-4 bg-white border border-teal-50/50 rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.02)] ${isFullWidth ? "col-span-full" : "col-span-full md:col-span-1"}`}>
+                <label className="block mb-3 font-bold text-[#1E5C58] text-xs md:text-sm leading-relaxed">
+                  {q.question_number ? `${q.question_number}. ` : ""}{q.question_text}
+                </label>
+
+                {q.answer_type === "radio" ? (
+                  <div className="flex flex-col sm:flex-row sm:gap-6 gap-3">
+                    {q.answer_options?.map((opt) => (
+                      <label
+                        key={opt}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all select-none text-xs md:text-sm font-semibold ${
+                          answers[group.group_key]?.[q.id] === opt 
+                            ? "bg-teal-50/50 border-[#2B7A75]/35 text-[#1E5C58]" 
+                            : "bg-white border-gray-200 text-gray-550 hover:border-gray-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`${group.group_key}-${q.id}`}
+                          checked={answers[group.group_key]?.[q.id] === opt}
+                          onChange={() => handleChange(group.group_key, q.id, opt)}
+                          className="accent-[#2B7A75] w-4.5 h-4.5 cursor-pointer"
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#2B7A75] focus:border-transparent transition-all duration-200 bg-gray-50/30 hover:bg-white focus:bg-white text-xs md:text-sm"
+                    value={answers[group.group_key]?.[q.id] ?? ""}
+                    onChange={(e) => handleChange(group.group_key, q.id, e.target.value)}
+                    placeholder="Ketik jawaban Anda di sini..."
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Navigation Buttons - Responsive */}
+        <div className="flex flex-col sm:flex-row justify-between mt-10 gap-4 pt-6 border-t border-gray-100">
           <button
             onClick={handlePreviousGroup}
             disabled={currentStep === 0}
-            className="w-full sm:w-auto px-4 py-2 md:px-6 md:py-2.5 bg-gray-200 hover:bg-gray-300 
-              text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed
-              transition-colors duration-200 text-sm md:text-base font-medium"
+            className="px-6 py-3.5 rounded-2xl border border-gray-200 text-[#1E5C58] font-bold bg-white hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs order-2 sm:order-1 active:scale-95 cursor-pointer text-center"
           >
             Sebelumnya
           </button>
-        </div>
 
-        <div className="w-full sm:w-auto mb-3 sm:mb-0">
-          {currentStep < groups.length - 1 ? (
-            <button
-              onClick={handleNextGroup}
-              className="w-full sm:w-auto px-4 py-2 md:px-6 md:py-2.5 bg-[#81B7A9] hover:bg-[#6BB1A0] 
-                text-white rounded-lg transition-colors duration-200
-                text-sm md:text-base font-medium shadow-sm"
-            >
-              Selanjutnya
-            </button>
-          ) : (
-            <button
-              onClick={onSave}
-              className="w-full sm:w-auto px-4 py-2 md:px-6 md:py-2.5 bg-[#81B7A9] hover:bg-[#6BB1A0] 
-                text-white rounded-lg transition-colors duration-200
-                text-sm md:text-base font-medium shadow-sm"
-            >
-              Simpan Jawaban
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Progress Indicator */}
-      <div className="mt-4 md:mt-6 text-center">
-        <p className="text-xs md:text-sm text-gray-500 font-medium">
-          Aspek <span className="text-[#409E86] font-bold">{currentStep + 1}</span> dari{" "}
-          <span className="text-[#36315B] font-bold">{groups.length}</span>
-        </p>
-        
-        {/* Progress Bar - Mobile Only */}
-        <div className="mt-2 md:hidden">
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-[#6BB1A0] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / groups.length) * 100}%` }}
-            ></div>
+          <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
+            {currentStep < groups.length - 1 ? (
+              <button
+                onClick={handleNextGroup}
+                className="px-10 py-3.5 bg-[#2B7A75] hover:bg-[#1E5C58] text-white rounded-2xl font-bold transition-all shadow-md shadow-teal-500/10 active:scale-95 text-xs w-full sm:w-auto cursor-pointer text-center flex items-center justify-center gap-1.5"
+              >
+                Lanjutkan <ChevronRight size={14} />
+              </button>
+            ) : (
+              <button
+                onClick={onSave}
+                className="px-10 py-3.5 bg-[#2B7A75] hover:bg-[#1E5C58] text-white rounded-2xl font-bold transition-all shadow-md shadow-teal-500/10 active:scale-95 text-xs w-full sm:w-auto cursor-pointer text-center flex items-center justify-center gap-1.5"
+              >
+                Simpan & Kirim Jawaban
+              </button>
+            )}
           </div>
         </div>
       </div>
     </ResponsiveOrangtuaLayout>
+  );
+}
+
+export default function PaedagogFormPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4">
+        <div className="h-10 w-10 border-4 border-teal-100 border-t-[#2B7A75] rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-semibold animate-pulse text-sm">Memuat Halaman...</p>
+      </div>
+    }>
+      <PaedagogFormContent />
+    </Suspense>
   );
 }

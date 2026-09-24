@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User,
+  Mail,
+  Phone,
+  UserCog,
+  ShieldPlus,
+  X,
+  CheckCircle2,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 interface FormTambahAdminProps {
   open: boolean;
@@ -39,6 +51,7 @@ export default function FormTambahAdmin({
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!open) return null;
 
@@ -102,143 +115,224 @@ export default function FormTambahAdmin({
       password: "",
     });
     setErrors({});
+    setShowPassword(false);
   };
 
   return (
-    <motion.div
-      className="fixed inset-0 flex items-center justify-center bg-black/40 z-50"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <motion.div
-        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
-        <h2 className="text-xl font-semibold text-[#36315B] mb-6">
-          Tambah Data Admin
-        </h2>
+    <AnimatePresence>
+      <div className="fixed inset-0 flex items-center justify-center bg-[#1E5C58]/20 backdrop-blur-sm z-50 p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative max-h-[90vh] overflow-y-auto"
+        >
+          {/* Custom Scrollbar for inner content */}
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `
+            .overflow-y-auto::-webkit-scrollbar { width: 5px; }
+            .overflow-y-auto::-webkit-scrollbar-track { background: transparent; }
+            .overflow-y-auto::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+            .overflow-y-auto::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+          `,
+            }}
+          />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nama */}
-          <div>
-            <label className="block text-sm font-medium text-[#36315B] mb-1">
-              Nama Lengkap
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan nama lengkap"
-              value={form.admin_name}
-              onChange={(e) =>
-                setForm({ ...form, admin_name: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#81B7A9] outline-none"
-            />
-            {errors.admin_name && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.admin_name}
-              </p>
-            )}
-          </div>
+          {/* Header */}
+          <div className="bg-linear-to-br from-[#1E5C58] to-[#2B7A75] p-6 text-white relative overflow-hidden shrink-0">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none z-0" />
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-[#36315B] mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="Masukkan email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#81B7A9] outline-none"
-            />
-            {errors.email && (
-              <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Telepon */}
-          <div>
-            <label className="block text-sm font-medium text-[#36315B] mb-1">
-              Telepon
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan nomor telepon"
-              value={form.admin_phone}
-              onChange={(e) =>
-                setForm({ ...form, admin_phone: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#81B7A9] outline-none"
-            />
-            {errors.admin_phone && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.admin_phone}
-              </p>
-            )}
-          </div>
-
-          {/* Username */}
-          <div>
-            <label className="block text-sm font-medium text-[#36315B] mb-1">
-              Nama Pengguna
-            </label>
-            <input
-              type="text"
-              placeholder='Buat nama pengguna “admin(Nama)”'
-              value={form.username}
-              onChange={(e) =>
-                setForm({ ...form, username: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#81B7A9] outline-none"
-            />
-            {errors.username && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.username}
-              </p>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-[#36315B] mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              placeholder="Buat Password"
-              value={form.password}
-              onChange={(e) =>
-                setForm({ ...form, password: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#81B7A9] outline-none"
-            />
-            {errors.password && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.password}
-              </p>
-            )}
-          </div>
-
-          {/* Action */}
-          <div className="flex justify-end gap-3 pt-4">
             <button
-              type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100"
+              className="cursor-pointer absolute right-4 top-4 text-white/70 hover:text-white bg-black/10 hover:bg-black/20 rounded-full p-1.5 transition-colors z-20"
             >
-              Batal
+              <X className="w-5 h-5" />
             </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-lg bg-[#81B7A9] text-white hover:bg-[#6fa194]"
-            >
-              Simpan
-            </button>
+
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/30 text-white">
+                <ShieldPlus className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Tambah Data Admin</h2>
+                <div className="text-xs font-semibold text-white/80 mt-1">
+                  Registrasi akun administrator baru
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
-      </motion.div>
-    </motion.div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {/* Nama Lengkap */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 ml-1">
+                Nama Lengkap
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <User
+                    className={`h-5 w-5 transition-colors ${errors.admin_name ? "text-red-400" : "text-gray-400 group-focus-within:text-[#2B7A75]"}`}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Budi Santoso"
+                  value={form.admin_name}
+                  onChange={(e) =>
+                    setForm({ ...form, admin_name: e.target.value })
+                  }
+                  className={`w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all text-sm text-gray-700 font-medium ${errors.admin_name ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 focus:border-[#2B7A75] focus:bg-white focus:ring-4 focus:ring-[#2B7A75]/10"}`}
+                />
+              </div>
+              {errors.admin_name && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.admin_name}
+                </p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 ml-1">
+                Email
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail
+                    className={`h-5 w-5 transition-colors ${errors.email ? "text-red-400" : "text-gray-400 group-focus-within:text-[#2B7A75]"}`}
+                  />
+                </div>
+                <input
+                  type="email"
+                  placeholder="budi@email.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className={`w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all text-sm text-gray-700 font-medium ${errors.email ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 focus:border-[#2B7A75] focus:bg-white focus:ring-4 focus:ring-[#2B7A75]/10"}`}
+                />
+              </div>
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            {/* Telepon */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 ml-1">
+                Telepon
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Phone
+                    className={`h-5 w-5 transition-colors ${errors.admin_phone ? "text-red-400" : "text-gray-400 group-focus-within:text-[#2B7A75]"}`}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="08123456789"
+                  value={form.admin_phone}
+                  onChange={(e) =>
+                    setForm({ ...form, admin_phone: e.target.value })
+                  }
+                  className={`w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all text-sm text-gray-700 font-medium ${errors.admin_phone ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 focus:border-[#2B7A75] focus:bg-white focus:ring-4 focus:ring-[#2B7A75]/10"}`}
+                />
+              </div>
+              {errors.admin_phone && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.admin_phone}
+                </p>
+              )}
+            </div>
+
+            {/* Username */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 ml-1">
+                Nama Pengguna
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <UserCog
+                    className={`h-5 w-5 transition-colors ${errors.username ? "text-red-400" : "text-gray-400 group-focus-within:text-[#2B7A75]"}`}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="adminBudi"
+                  value={form.username}
+                  onChange={(e) =>
+                    setForm({ ...form, username: e.target.value })
+                  }
+                  className={`w-full pl-11 pr-4 py-3 bg-gray-50 border rounded-xl outline-none transition-all text-sm text-gray-700 font-medium ${errors.username ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 focus:border-[#2B7A75] focus:bg-white focus:ring-4 focus:ring-[#2B7A75]/10"}`}
+                />
+              </div>
+              {errors.username && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.username}
+                </p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-semibold text-gray-700 ml-1">
+                Password
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <LockKeyhole
+                    className={`h-5 w-5 transition-colors ${errors.password ? "text-red-400" : "text-gray-400 group-focus-within:text-[#2B7A75]"}`}
+                  />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••••••"
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                  className={`w-full pl-11 pr-12 py-3 bg-gray-50 border rounded-xl outline-none transition-all text-sm text-gray-700 font-medium ${errors.password ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10" : "border-gray-200 focus:border-[#2B7A75] focus:bg-white focus:ring-4 focus:ring-[#2B7A75]/10"}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            {/* Action */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="cursor-pointer px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="cursor-pointer px-5 py-2.5 rounded-xl bg-[#2B7A75] text-white font-bold hover:bg-[#1E5C58] shadow-md shadow-teal-500/20 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Simpan Admin
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
+    </AnimatePresence>
   );
 }

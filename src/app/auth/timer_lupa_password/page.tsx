@@ -1,27 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useEffect, Suspense } from "react"; // ✅ Tambahkan Suspense
-import { motion } from "framer-motion";
+import { useState, useEffect, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { MailCheck, ArrowLeft, KeyRound, Home } from "lucide-react";
 import { forgotPassword } from "@/lib/api/forgotpassword";
 
-// --- KOMPONEN UTAMA (Wrapper dengan Suspense) ---
 export default function TimerLupaPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Memuat halaman...
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-teal-800 bg-teal-50/20">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-[#2B7A75] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-semibold">Memuat halaman...</span>
+          </div>
+        </div>
+      }
+    >
       <TimerLupaPasswordContent />
     </Suspense>
   );
 }
 
-// --- SUB-KOMPONEN KONTEN (Logika Asli Anda) ---
 function TimerLupaPasswordContent() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -66,74 +70,151 @@ function TimerLupaPasswordContent() {
   };
 
   return (
-    <main className="layout-main min-h-screen flex flex-col items-center justify-center font-playpen">
-      <header className="header flex justify-left" style={{ marginTop: 24, marginBottom: 24 }}>
-        <Image src="/logo.png" alt="Logo Puspa" width={160} height={50} priority />
-      </header>
+    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row overflow-hidden selection:bg-[#2B7A75] selection:text-white">
+      {/* Left Side - Visual & Branding */}
+      <div className="w-full md:w-5/12 bg-linear-to-br from-[#1E5C58] to-[#2B7A75] p-8 md:p-12 text-white relative hidden md:flex flex-col justify-between overflow-hidden min-h-screen">
+        {/* Decorative shapes */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#0d3633]/30 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
-      <div className="form-wrapper flex justify-center w-full shadow-[0_4px_20px_#ADADAD]">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="layout-form"
-          style={{ width: 430, height: 350, padding: 20 }}
-        >
-          <h2 className="text-[20px] font-extrabold text-[#36315B] text-center my-4">
-            Silahkan cek Email Anda
-          </h2>
-
-          <p className="text-[12px] text-[#36315B] text-center mb-6">
-            Kami sudah mengirim link reset ke email{" "}
-            <span className="font-bold">{email}</span>.
-          </p>
-
-          {!canResend ? (
-            <p className="text-[#8D8D8D] text-sm text-center mb-4">
-              Tidak menerima email? Tunggu{" "}
-              <span className="text-[#EDB720]">{timeLeft} detik</span> untuk mengirim ulang.
-            </p>
-          ) : (
-            <p className="text-[#8D8D8D] text-sm text-center mb-4">
-              Anda bisa kirim ulang sekarang.
-            </p>
-          )}
-
-          {msg && <p className="text-[#81B7A9] text-sm text-center mb-2">{msg}</p>}
-          {error && <p className="text-red-600 text-sm text-center mb-2">{error}</p>}
-
-          <button
-            onClick={handleResend}
-            disabled={!canResend || loading}
-            style={{
-              backgroundColor: canResend ? "#81B7A9" : "#8D8D8D",
-              color: "#FFFFFF",
-              width: "100%",
-              height: 45,
-              borderRadius: 8,
-              fontWeight: 500,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-              marginTop: 8,
-              marginBottom: 16,
-              transition: "background-color 0.3s",
-              cursor: canResend ? "pointer" : "not-allowed",
-            }}
+        <div className="relative z-10">
+          <Link
+            href="/"
+            className="bg-white p-2.5 rounded-xl inline-block mb-10 shadow-lg hover:scale-105 transition-transform"
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
-            ) : (
-              "KIRIM ULANG"
-            )}
-          </button>
+            <Image
+              src="/logo.png"
+              alt="Logo Puspa"
+              width={120}
+              height={35}
+              className="w-auto h-6 lg:h-8 object-contain"
+            />
+          </Link>
+        </div>
 
-          <div className="text-center mt-4">
-            <p className="text-[#8D8D8D] text-[15px] mb-1">Kembali?</p>
-            <p className="text-[#EDB720] text-[16px] font-normal">
-              <Link href="/auth/login">Klik disini</Link>
+        <div className="relative z-10 my-auto">
+          <div className="w-14 h-14 bg-[#A2E4D3]/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm border border-white/10">
+            <MailCheck className="w-8 h-8 text-[#A2E4D3]" />
+          </div>
+          <h1 className="text-3xl lg:text-4xl font-extrabold leading-tight mb-4">
+            Periksa Email Anda
+          </h1>
+          <p className="text-teal-50 text-sm lg:text-base leading-relaxed opacity-90 max-w-sm">
+            Tautan pemulihan kata sandi telah dikirim. Silakan periksa kotak masuk atau folder spam pada email Anda.
+          </p>
+        </div>
+
+        <div className="relative z-10 text-xs text-teal-100/50 mt-auto">
+          &copy; {new Date().getFullYear()} Puspa. Semua Hak Dilindungi.
+        </div>
+      </div>
+
+      {/* Right Side - Code / Resend Form */}
+      <div className="w-full md:w-7/12 p-8 sm:p-12 md:p-16 xl:p-24 bg-white relative flex flex-col justify-center min-h-screen overflow-y-auto">
+        <div className="max-w-md mx-auto w-full">
+          {/* Back links section */}
+          <div className="flex items-center justify-between mb-8">
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-500 hover:text-[#2B7A75] transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-[#2B7A75] transition-colors" />
+              <span>Kembali ke Halaman Masuk</span>
+            </Link>
+
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-500 hover:text-[#2B7A75] transition-colors group"
+            >
+              <Home className="w-4 h-4 text-gray-400 group-hover:text-[#2B7A75] transition-colors" />
+              <span>Beranda</span>
+            </Link>
+          </div>
+
+          {/* Mobile Logo */}
+          <div className="md:hidden flex justify-center mb-8">
+            <Link
+              href="/"
+              className="bg-gray-50 p-3 rounded-2xl border border-gray-100 shadow-sm"
+            >
+              <Image
+                src="/logo.png"
+                alt="Logo Puspa"
+                width={140}
+                height={40}
+                className="w-auto h-8 object-contain"
+              />
+            </Link>
+          </div>
+
+          <div className="mb-10 text-center md:text-left">
+            <h2 className="text-2xl lg:text-3xl font-extrabold text-[#1E5C58] mb-2">
+              Email Telah Dikirim!
+            </h2>
+            <p className="text-gray-500 text-sm leading-relaxed">
+              Kami telah mengirimkan instruksi setel ulang kata sandi ke email: <br />
+              <span className="font-bold text-[#1E5C58] break-all">{email}</span>
             </p>
           </div>
-        </motion.div>
+
+          <div className="space-y-6">
+            <div className="bg-[#F4F9F8] p-5 rounded-xl border border-teal-100/60 text-center">
+              {!canResend ? (
+                <p className="text-gray-600 text-sm">
+                  Tidak menerima email? Tunggu{" "}
+                  <span className="text-[#EDB720] font-bold">{timeLeft} detik</span> sebelum mengirim ulang.
+                </p>
+              ) : (
+                <p className="text-[#2B7A75] text-sm font-semibold">
+                  Anda sekarang dapat meminta pengiriman ulang email.
+                </p>
+              )}
+            </div>
+
+            {/* Notification Messages */}
+            <AnimatePresence mode="wait">
+              {msg && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-teal-50 border border-teal-100 rounded-xl p-3.5 flex items-center gap-3 text-teal-800"
+                >
+                  <span className="text-xs font-semibold">{msg}</span>
+                </motion.div>
+              )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-red-50 border border-red-100 rounded-xl p-3.5 flex items-center gap-3 text-red-650"
+                >
+                  <span className="text-xs font-semibold">{error}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Resend Button */}
+            <button
+              onClick={handleResend}
+              disabled={!canResend || loading}
+              className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm shadow-md active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer
+                ${
+                  canResend
+                    ? "bg-[#2B7A75] hover:bg-[#1E5C58] text-white shadow-teal-700/10 hover:shadow-teal-700/20"
+                    : "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
+                }`}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span>Kirim Ulang Email</span>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
