@@ -347,7 +347,8 @@ export default function JadwalPage() {
           >
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-visible pb-24">
-              <table className="w-full text-left border-collapse min-w-[800px]">
+              {tab === "selesai" ? (
+                <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="border-b border-gray-200 text-[#36315B] bg-gray-50">
                     <th className="p-3 text-left">Nama Pasien</th>
@@ -448,19 +449,6 @@ export default function JadwalPage() {
                         </th>
                       </>
                     )}
-                    {tab === "selesai" && (
-                      <>
-                        <th className="py-4 px-6 text-xs font-bold text-[#1E5C58] uppercase tracking-wider">
-                          Jadwal Observasi
-                        </th>
-                        <th className="py-4 px-6 text-xs font-bold text-[#1E5C58] uppercase tracking-wider">
-                          Administrator
-                        </th>
-                        <th className="py-4 px-6 text-xs font-bold text-[#1E5C58] uppercase tracking-wider">
-                          Status Asesmen
-                        </th>
-                      </>
-                    )}
                     <th className="py-4 px-6 text-xs font-bold text-[#1E5C58] uppercase tracking-wider text-center">
                       Tindakan
                     </th>
@@ -544,8 +532,8 @@ export default function JadwalPage() {
                           </>
                         )}
 
-                        {/* --- TAB TERJADWAL & SELESAI --- */}
-                        {(tab === "terjadwal" || tab === "selesai") && (
+                        {/* --- TAB TERJADWAL --- */}
+                        {tab === "terjadwal" && (
                           <>
                             <td className="py-4 px-6">
                               <div className="space-y-1">
@@ -642,16 +630,12 @@ export default function JadwalPage() {
 </td>
 
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             )}
           </div>
-
-          {/* DROPDOWN AKSI */}
-          {/* DROPDOWN AKSI */}
-          
-
+        </motion.div>
         </main>
       </div>
 
